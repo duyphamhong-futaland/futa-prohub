@@ -9,14 +9,61 @@ window.SCREENS = window.SCREENS || {};
 function customersResults(){
   const f=Filt.st('cust'); const list=Store.get().customers.filter(c=>Filt.any(f.q, c.name, c.phone, c.cccd, c.email));
   return `<div style="overflow:auto"><table class="tbl"><thead><tr><th>STT</th><th>Họ tên</th><th>Giới tính</th><th>Ngày sinh</th><th>Điện thoại</th><th>Email</th><th>CCCD/Hộ chiếu</th><th>Sản phẩm quan tâm</th></tr></thead>
-   <tbody>${list.map((c,i)=>{const sp=Store.products().filter(p=>p.customerId===c.id).map(p=>p.ma).join(', ');
-     return `<tr><td>${i+1}</td><td style="white-space:nowrap;font-weight:600">${c.name}</td><td>${c.gender||''}</td><td>${c.dob||''}</td><td>${c.phone||''}</td><td>${c.email||''}</td><td>${c.cccd||''}</td><td>${sp||'—'}</td></tr>`;}).join('')||`<tr><td colspan="8" style="text-align:center;color:#9aa3af;padding:30px">Không có khách hàng phù hợp</td></tr>`}</tbody></table></div>
+   <tbody>${list.map((c,i)=>{const linked=Store.products().filter(p=>p.customerId===c.id).map(p=>p.ma).join(', ');
+     const sp=linked||c.spQuanTam||'';
+     return `<tr><td>${i+1}</td><td style="white-space:nowrap;font-weight:600">${esc(c.name)}</td><td>${esc(c.gender||'')}</td><td>${esc(c.dob||'')}</td><td>${esc(c.phone||'')}</td><td>${esc(c.email||'')}</td><td>${esc(c.cccd||'')}</td><td>${esc(sp)||'—'}</td></tr>`;}).join('')||`<tr><td colspan="8" style="text-align:center;color:#9aa3af;padding:30px">Không có khách hàng phù hợp</td></tr>`}</tbody></table></div>
    ${pagerN('Hiển thị '+list.length+' bản ghi',1)}`;
 }
 SCREENS.customers=()=>{ Filt.reg('cust',customersResults); return `<div class="page-title">KHÁCH HÀNG</div>
    <div class="toolbar">${Filt.searchBox('cust',260)}<div class="spacer"></div>
-     <button class="btn btn-primary" onclick="toast('Mở form tạo khách hàng')">＋ Tạo mới</button></div>
+     ${(typeof Perm==='undefined'||Perm.can('customers'))?`<button class="btn btn-primary" onclick="openCustomerForm()">＋ Tạo mới</button>`:''}</div>
    <div id="cust-res">${customersResults()}</div>`; };
+
+/* Form tạo khách hàng (thu thập: Họ tên · Giới tính · Ngày sinh · Điện thoại ·
+   Email · CCCD/Hộ chiếu · Sản phẩm quan tâm) */
+function openCustomerForm(){
+  if(typeof Perm!=='undefined' && !Perm.can('customers')){ toast('Bạn không có quyền tạo khách hàng','err'); return; }
+  document.getElementById('modalRoot').innerHTML=`
+  <div class="overlay" onclick="if(event.target===this)closeModal()">
+   <div class="modal" style="max-width:560px">
+    <div class="modal-h"><b>Tạo mới khách hàng</b><button class="x" onclick="closeModal()">×</button></div>
+    <div class="modal-b" style="max-height:80vh;overflow:auto">
+      ${frow('Họ tên',1,inpId('cf_name','','Nguyễn Văn A'))}
+      ${frow('Giới tính',0,selId('cf_gender',['Nam','Nữ','Khác']))}
+      ${frow('Ngày sinh',0,inpId('cf_dob','','DD/MM/YYYY'))}
+      ${frow('Điện thoại',0,inpId('cf_phone','','VD: 0905xxxxxx'))}
+      ${frow('Email',0,inpId('cf_email','','vd@email.com'))}
+      ${frow('CCCD/Hộ chiếu',0,inpId('cf_cccd','','Số CCCD/Hộ chiếu'))}
+      ${frow('Sản phẩm quan tâm',0,inpId('cf_sp','','VD: CT7-09.04 · Căn 2PN · Shophouse'))}
+      <div class="modal-actions">
+        <button class="btn btn-ghost" onclick="closeModal()">Hủy</button>
+        <button class="btn btn-primary" onclick="saveCustomer()">Lưu khách hàng</button>
+      </div>
+    </div>
+   </div>
+  </div>`;
+  setTimeout(()=>{const el=document.getElementById('cf_name'); if(el) el.focus();},30);
+}
+function saveCustomer(){
+  if(typeof Perm!=='undefined' && !Perm.guard('customers')) return;
+  const val=id=>{const e=document.getElementById(id); return e?e.value.trim():'';};
+  const name=val('cf_name');
+  if(!name){ toast('Vui lòng nhập họ tên khách hàng','warn'); const n=document.getElementById('cf_name'); if(n)n.focus(); return; }
+  const phone=val('cf_phone'), email=val('cf_email'), cccd=val('cf_cccd');
+  if(email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){ toast('Email không hợp lệ','warn'); return; }
+  if(phone && !/^[0-9+()\s.\-]{6,}$/.test(phone)){ toast('Số điện thoại không hợp lệ','warn'); return; }
+  const dup=Store.get().customers.find(c=>(phone&&c.phone===phone)||(cccd&&c.cccd===cccd));
+  if(dup && !confirm('Đã có khách "'+dup.name+'" trùng SĐT/CCCD. Vẫn tạo mới?')) return;
+  const id='C'+Date.now().toString(36).toUpperCase();
+  Store.mutate(st=>{
+    st.customers.unshift({id, name, gender:val('cf_gender'), dob:val('cf_dob'), phone, email, cccd,
+      ngayCap:'', noiCap:'', diaChi:'', spQuanTam:val('cf_sp')});
+    Store.audit('Tạo khách hàng '+name, id);
+  });
+  toast('Đã tạo khách hàng: '+name);
+  closeModal();
+  if(typeof App!=='undefined' && App.rerender) App.rerender();
+}
 
 /* ---- RBAC ---- */
 SCREENS.rbac=()=>{
