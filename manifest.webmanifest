@@ -4,8 +4,8 @@
   "description": "Quản lý bán hàng & giao dịch BĐS sơ cấp (FUTA Land)",
   "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#0050D8",
-  "theme_color": "#0050D8",
+  "background_color": "#0F5226",
+  "theme_color": "#1B7F3B",
   "lang": "vi",
   "icons": []
 }

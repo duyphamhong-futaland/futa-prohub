@@ -26,10 +26,10 @@ const C5BTpl = (function () {
     .c5b-fill{ display:inline-block; min-width:120px; border-bottom:1px dotted #777; }
     table.c5b-tbl { border-collapse:collapse; width:100%; margin:6px 0; }
     .c5b-tbl td, .c5b-tbl th { border:1px solid #555; padding:4px 7px; vertical-align:top; text-align:left; }
-    .c5b-toolbar { position:sticky; top:0; background:#0050D8; color:#fff; padding:9px 14px; margin:-16px -12px 16px;
+    .c5b-toolbar { position:sticky; top:0; background:#1B7F3B; color:#fff; padding:9px 14px; margin:-16px -12px 16px;
                    display:flex; gap:12px; align-items:center; font-family:Arial, sans-serif; font-size:13px; }
     .c5b-toolbar select { padding:4px 8px; border-radius:6px; border:none; }
-    .c5b-toolbar button { padding:5px 14px; border:none; border-radius:6px; background:#fff; color:#0050D8; font-weight:700; cursor:pointer; }
+    .c5b-toolbar button { padding:5px 14px; border:none; border-radius:6px; background:#fff; color:#1B7F3B; font-weight:700; cursor:pointer; }
     @media print { .c5b-toolbar { display:none; } body { padding-top:0; } }
   `;
 
@@ -100,7 +100,7 @@ const C5BTpl = (function () {
     ensureContent(function () {
       const html = window.C5B_CONTENT[id];
       if (!html) { typeof toast === 'function' && toast('Không tìm thấy mẫu ' + id); return; }
-      const noteHtml = note ? `<span style="background:#fff;color:#0050D8;padding:3px 10px;border-radius:6px;font-weight:700">${note}</span>` : '';
+      const noteHtml = note ? `<span style="background:#fff;color:#1B7F3B;padding:3px 10px;border-radius:6px;font-weight:700">${note}</span>` : '';
       const opts = all().filter(t => !group || t.group === group)
         .map(t => `<option value="${t.id}"${t.id === id ? ' selected' : ''}>${t.name}</option>`).join('');
       const dataJson = JSON.stringify(data || {}).replace(/</g, '\\u003c');

@@ -121,7 +121,7 @@ SCREENS.reports=()=>{
      ${kpi('Tổng sản phẩm',total)}
      ${kpi('Đang giao dịch',deal,'#E07A1E')}
      ${kpi('Đã cọc / hợp đồng',sold,'#1f9d3d')}
-     ${kpi('Doanh số (có VAT)',fmtVN(revenue)+' đ','#0050D8')}
+     ${kpi('Doanh số (có VAT)',fmtVN(revenue)+' đ','#1B7F3B')}
    </div>
    ${dashboardHTML()}`;
 };

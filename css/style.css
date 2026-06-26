@@ -1,7 +1,9 @@
 :root{
-  --blue:#0050D8; --blue-d:#0042b0; --blue2:#197CF4; --btn:#1E74E0; --btn-h:#1660c5;
-  --orange:#E07A1E; --green:#0C6030; --red:#D80C30;
-  --nav-active:#FDECD8; --ink:#1f2733; --muted:#6b7785; --line:#e3e7ee; --bg:#eef1f6;
+  /* Bộ nhận diện FUTA Land: xanh lá (FUTA Land) + đỏ (Phương Trang).
+     Giữ tên biến --blue* để khỏi sửa 60+ chỗ; giá trị nay là XANH LÁ brand. */
+  --blue:#1B7F3B; --blue-d:#13602C; --blue2:#1E9447; --btn:#1B7F3B; --btn-h:#13602C;
+  --orange:#E07A1E; --green:#1B7F3B; --red:#C8102E;
+  --nav-active:#E5F3EA; --ink:#1f2733; --muted:#6b7785; --line:#e3e7ee; --bg:#eef1f6;
   /* status palette sampled from app */
   --s-empty:#ffffff; --s-all:#d9d9d9; --s-yellow:#FCE3A1; --s-purple:#9B59B6;
   --s-cyan:#AEE0F5; --s-orange:#F08C2E; --s-red:#F0413E; --s-green:#3DD13D;
@@ -16,14 +18,14 @@ a{color:var(--blue2);text-decoration:none}
 
 /* ---------- LOGIN ---------- */
 #login{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
-  background:linear-gradient(135deg,#3b3fcf 0%,#474BD6 45%,#5a52c8 100%);overflow:hidden}
+  background:linear-gradient(135deg,#0F5226 0%,#1B7F3B 50%,#2BA458 100%);overflow:hidden}
 #login::before{content:"";position:absolute;inset:0;background:
   radial-gradient(circle at 20% 30%,rgba(255,255,255,.06),transparent 40%),
   radial-gradient(circle at 80% 70%,rgba(255,255,255,.05),transparent 40%);}
 .login-brand{display:flex;align-items:center;gap:14px;margin-bottom:26px;z-index:1}
-.logo-box{background:#fff;border:2px solid #c62828;border-radius:6px;padding:6px 8px;line-height:1;text-align:center}
-.logo-box b{color:#c62828;font-size:18px;font-style:italic;letter-spacing:-1px}
-.logo-box small{display:block;color:#1a7a2e;font-size:7px;font-weight:700;letter-spacing:1px}
+.logo-box{background:#fff;border:2px solid #C8102E;border-radius:6px;padding:6px 8px;line-height:1;text-align:center}
+.logo-box b{color:#1B7F3B;font-size:18px;font-style:italic;letter-spacing:-1px}
+.logo-box small{display:block;color:#C8102E;font-size:7px;font-weight:700;letter-spacing:1px}
 .login-brand .ti{color:#fff}.login-brand .ti b{font-size:24px;font-weight:800}
 .login-brand .ti small{display:block;font-size:9px;letter-spacing:2px;opacity:.9}
 .login-card{background:#fff;border-radius:12px;padding:38px 42px;width:430px;box-shadow:0 24px 60px rgba(0,0,0,.3);z-index:1}
@@ -31,7 +33,7 @@ a{color:var(--blue2);text-decoration:none}
 .login-card .ph{width:100%;border:none;border-bottom:1.5px solid #d0d0d0;padding:8px 2px;font-size:14px;color:#999;background:#f6f6f8}
 .login-card .ph2{width:100%;border:none;border-bottom:1.5px solid var(--red);padding:8px 2px;font-size:15px}
 .login-card .err{color:var(--red);font-size:11px;margin-top:4px}
-.btn-login{width:100%;margin-top:24px;background:var(--orange);color:#fff;border:none;border-radius:24px;padding:13px;font-size:15px;font-weight:600}
+.btn-login{width:100%;margin-top:24px;background:var(--blue);color:#fff;border:none;border-radius:24px;padding:13px;font-size:15px;font-weight:600}
 .btn-login:hover{filter:brightness(1.05)}
 .forgot{display:block;text-align:center;margin-top:18px;color:var(--blue);font-weight:600;font-size:13px}
 .login-foot{margin-top:26px;color:rgba(255,255,255,.92);font-size:13px;z-index:1}
@@ -40,8 +42,8 @@ a{color:var(--blue2);text-decoration:none}
 .login-roles .lr-h{font-size:11px;color:var(--muted);text-align:center;margin-bottom:10px;text-transform:uppercase;letter-spacing:.5px}
 .role-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .role-chip{display:flex;align-items:center;gap:9px;border:1px solid var(--line);border-radius:8px;padding:8px 10px;cursor:pointer;background:#fff;text-align:left;transition:.12s}
-.role-chip:hover{border-color:var(--blue2);background:#f5f9ff}
-.role-chip .ra{width:28px;height:28px;border-radius:50%;background:#e7eefb;color:var(--blue);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:11px;flex-shrink:0}
+.role-chip:hover{border-color:var(--blue2);background:#f0f9f3}
+.role-chip .ra{width:28px;height:28px;border-radius:50%;background:#e5f3ea;color:var(--blue);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:11px;flex-shrink:0}
 .role-chip .rn{font-weight:600;font-size:12px;line-height:1.2}
 .role-chip .rd{font-size:10px;color:var(--muted)}
 
@@ -59,7 +61,7 @@ a{color:var(--blue2);text-decoration:none}
 .bell .badge{position:absolute;top:-7px;right:-9px;background:var(--red);color:#fff;border-radius:10px;font-size:9px;padding:1px 4px;font-weight:700}
 .tb-user{display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer}
 .tb-user .role-tag{font-size:10px;opacity:.85}
-.avatar{width:26px;height:26px;border-radius:50%;background:#cdd6ea;display:flex;align-items:center;justify-content:center;color:var(--blue);font-weight:700;font-size:11px}
+.avatar{width:26px;height:26px;border-radius:50%;background:#cfe6d6;display:flex;align-items:center;justify-content:center;color:var(--blue);font-weight:700;font-size:11px}
 .logout-link{color:#fff;opacity:.85;font-size:12px;cursor:pointer}
 .logout-link:hover{opacity:1;text-decoration:underline}
 
