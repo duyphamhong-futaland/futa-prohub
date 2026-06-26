@@ -16,6 +16,7 @@ CFG.NAV = [
      {label:"Chương trình bán hàng", key:"ctbh-list"},
   ]},
   {ico:"🧾", label:"Chính sách bán hàng", key:"policy", cap:"policy.view", children:[
+     {label:"Chính sách đang áp dụng", key:"policy-active"},
      {label:"Chính sách thanh toán", key:"pay-list"},
      {label:"Chính sách chiết khấu", key:"disc-list"},
      {label:"Lịch sử tải nhập", key:"importlog"},
@@ -146,6 +147,7 @@ CFG.DEMO_USERS = [
 CFG.CRUMB = {
   projects:"🏠 Dự án", investors:"🏠 Dự án / Danh sách chủ đầu tư", importlog:"🏠 Dự án / Lịch sử tải nhập",
   detail:"🏠 Dự án / Quản lý bán hàng",
+  "policy-active":"🏠 Chính sách bán hàng / Chính sách đang áp dụng",
   "pay-list":"🏠 Chính sách bán hàng / Chính sách thanh toán","pay-form":"🏠 Chính sách bán hàng / Tạo mới chính sách thanh toán",
   "disc-list":"🏠 Chính sách bán hàng / Chính sách chiết khấu","disc-form":"🏠 Chính sách bán hàng / Tạo mới chính sách chiết khấu",
   "liq-form":"🏠 Thanh lý / Đơn đề nghị", "project-form":"🏠 Dự án / Tạo mới dự án",
@@ -168,7 +170,7 @@ CFG.CRUMB = {
   "erp-sync":"🏠 Đồng bộ ERP", "dxhome":"🏠 Quản lý thông báo DxHome",
 };
 CFG.ROUTE_GROUP = {'req-detail':'payments','ctbh':'projects','detail':'projects','project-form':'projects',
-  'pay-detail':'policy','disc-detail':'policy','pay-form':'policy','disc-form':'policy','receipt':'accounting',
+  'policy-active':'policy','pay-detail':'policy','disc-detail':'policy','pay-form':'policy','disc-form':'policy','receipt':'accounting',
   'hd-coc-detail':'contracts','hd-mb-detail':'contracts','hd-cn-detail':'contracts'};
 
 /* route -> cap cần để xem (chặn truy cập thẳng) */

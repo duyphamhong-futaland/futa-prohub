@@ -96,10 +96,11 @@ const C5BTpl = (function () {
   }
 
   /* mở cửa sổ in cho 1 template + dữ liệu, kèm thanh chọn biến thể (không in ra) */
-  function openPrint(id, data, group) {
+  function openPrint(id, data, group, note) {
     ensureContent(function () {
       const html = window.C5B_CONTENT[id];
       if (!html) { typeof toast === 'function' && toast('Không tìm thấy mẫu ' + id); return; }
+      const noteHtml = note ? `<span style="background:#fff;color:#0050D8;padding:3px 10px;border-radius:6px;font-weight:700">${note}</span>` : '';
       const opts = all().filter(t => !group || t.group === group)
         .map(t => `<option value="${t.id}"${t.id === id ? ' selected' : ''}>${t.name}</option>`).join('');
       const dataJson = JSON.stringify(data || {}).replace(/</g, '\\u003c');
@@ -109,7 +110,7 @@ const C5BTpl = (function () {
         '<!doctype html><html lang="vi"><head><meta charset="utf-8"><title>' +
         (meta(id) ? meta(id).name : id) + '</title><style>' + PRINT_CSS + '</style></head><body>' +
         '<div class="c5b-toolbar">📑 Mẫu: <select id="c5bSel" onchange="c5bRender(this.value)">' + opts + '</select>' +
-        '<button onclick="window.print()">🖨 In / Lưu PDF</button>' +
+        '<button onclick="window.print()">🖨 In / Lưu PDF</button>' + noteHtml +
         '<span style="opacity:.85">Đã tự điền từ dữ liệu giao dịch — chỗ trống là ô điền tay.</span></div>' +
         '<div id="c5bDoc"></div>' +
         '<script>var C=' + contentJson + ',D=' + dataJson + ';' +
@@ -137,7 +138,13 @@ const C5BTpl = (function () {
     const group = groupMap[type] || 'hdmb';
     const tpl = pick(group, buyerTypeOf(khName), 'chuan');
     if (!tpl) { typeof toast === 'function' && toast('Chưa có mẫu cho nhóm ' + group); return; }
-    openPrint(tpl.id, dataFrom(c, p, cust), group);
+    // Chính sách C5B áp dụng theo phương thức (Vay/Chuẩn/Nhanh) — đối chứng file CS 22/06/2026
+    let note = '';
+    if ((group === 'hdmb' || group === 'coc') && typeof POL !== 'undefined') {
+      const ck = POL.c5bDiscount(tpl.payment);
+      if (ck && ck.label) note = 'CS: ' + ck.label + (ck.pct ? ' · CK ' + (ck.pct * 100) + '%' : ' · không CK');
+    }
+    openPrint(tpl.id, dataFrom(c, p, cust), group, note);
     typeof toast === 'function' && toast('Mở mẫu: ' + tpl.name);
   }
 
