@@ -106,3 +106,21 @@ function runWF(key, ma, data){
   if(r.ok){ closeModal(); App.rerender(); }
   return r;
 }
+
+/* In chứng từ chung: mở cửa sổ in A4 (Times New Roman) với nội dung bodyHtml */
+function printDoc(title, bodyHtml){
+  const w=window.open('','_blank'); if(!w){ toast('Trình duyệt chặn cửa sổ in — cho phép pop-up','warn'); return; }
+  const css="@page{size:A4;margin:16mm}*{box-sizing:border-box}body{font-family:'Times New Roman',serif;font-size:13pt;line-height:1.5;color:#000;max-width:190mm;margin:0 auto;padding:10px 12px 30px}"+
+    "h1{font-size:15pt;text-align:center;margin:2px 0 2px;text-transform:uppercase}h2{font-size:13pt;margin:10px 0 4px}.muted{color:#444}.center{text-align:center}.right{text-align:right}"+
+    ".kv{display:grid;grid-template-columns:210px 1fr;gap:8px;padding:3px 0;font-size:12.5pt}.kv b{font-weight:700}"+
+    "table{border-collapse:collapse;width:100%;margin:8px 0}td,th{border:1px solid #555;padding:5px 8px;text-align:left;font-size:11.5pt}th{background:#eee}"+
+    ".sign{display:flex;justify-content:space-around;margin-top:34px;text-align:center;font-weight:700}"+
+    ".bar{position:sticky;top:0;background:#1B7F3B;color:#fff;padding:8px 12px;margin:-10px -12px 14px;font-family:Arial,sans-serif;font-size:13px;display:flex;gap:12px;align-items:center}"+
+    ".bar button{background:#fff;color:#1B7F3B;border:none;border-radius:6px;padding:5px 14px;font-weight:700;cursor:pointer}"+
+    "@media print{.bar{display:none}body{padding-top:0}}";
+  w.document.write('<!doctype html><html lang="vi"><head><meta charset="utf-8"><title>'+title+'</title><style>'+css+'</style></head><body>'+
+    '<div class="bar"><button onclick="window.print()">🖨 In / Lưu PDF</button><span>'+title+'</span></div>'+bodyHtml+'</body></html>');
+  w.document.close(); w.focus();
+}
+/* nhảy tới tab Hướng dẫn quy trình trong màn Quản lý bán hàng */
+function gotoQuytrinh(){ try{ if(typeof go==='function') go('detail'); if(typeof setDTab==='function') setDTab('quytrinh'); }catch(e){} return false; }

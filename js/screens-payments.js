@@ -13,6 +13,17 @@ function ptPill(k){
   return `<span style="background:${map[k]||'#eef0f3;color:#555'};padding:3px 9px;border-radius:12px;font-size:11px;font-weight:600;white-space:nowrap">${ptLabel(k)}</span>`;
 }
 function approvePayUI(ma){ if(!Perm.guard('accounting.approve'))return; const r=Workflow.approvePayment(ma); toast(r.msg,r.ok?'':'err'); if(r.ok) App.rerender(); }
+/* In phiếu thu / đề nghị thu tiền */
+function printReceipt(ma){
+  const r=Store.get().payReqs.find(x=>x.ma===ma); if(!r){ toast('Không tìm thấy phiếu','err'); return; }
+  const kv=(k,v)=>`<div class="kv"><b>${k}</b><div>${esc(v||'…')}</div></div>`;
+  const body=`<h1>${/hợp đồng/i.test(r.loaiPhieu)?'Phiếu thu tiền hợp đồng':'Phiếu thu / Đề nghị thu tiền'}</h1>
+    <div class="center muted">Số phiếu: <b>${esc(r.ma)}</b> · ${esc(ptLabel(r.status))}</div>
+    ${kv('Dự án',r.duAn)}${kv('Loại phiếu',r.loaiPhieu)}${kv('Khách hàng',r.kh)}${kv('Sàn / ĐVBH',r.san)}${kv('Mã sản phẩm',r.sp)}
+    ${kv('Mã YC/HĐ',r.ycHd||r.ycdch)}${kv('Số tiền',(r.soTien||'')+' VNĐ')}${kv('Mã chứng từ ERP',r.chungTu)}${kv('Ngày tạo',r.ngayTao)}
+    <div class="sign"><div>KẾ TOÁN<br><span style="font-weight:400">(Ký, ghi rõ họ tên)</span></div><div>NGƯỜI NỘP TIỀN<br><span style="font-weight:400">(Ký, ghi rõ họ tên)</span></div></div>`;
+  printDoc('Phiếu thu — '+r.ma, body);
+}
 
 function reqTable(list, fee, withApprove){
   return `<div style="overflow:auto"><table class="tbl"><thead><tr>
@@ -20,7 +31,7 @@ function reqTable(list, fee, withApprove){
     <tbody>${list.map(r=>`<tr>
       <td><input type="checkbox"></td>
       <td style="text-align:center;white-space:nowrap">
-        <span title="In phiếu" style="color:var(--blue2);cursor:pointer;font-size:15px" onclick="event.stopPropagation();toast('Đang in ${r.ma}...')">🖨</span>
+        <span title="In phiếu" style="color:var(--blue2);cursor:pointer;font-size:15px" onclick="event.stopPropagation();printReceipt('${r.ma}')">🖨</span>
         ${withApprove&&r.status==='cho_duyet'&&Perm.can('accounting.approve')?` <a href="#" onclick="approvePayUI('${r.ma}');return false">Duyệt</a>`:''}</td>
       <td style="white-space:nowrap">${r.duAn}</td><td class="code" onclick="openReq('${r.ma}',${fee?'true':'false'})">${r.ma}</td><td>${r.loaiPhieu}</td>
       <td style="white-space:nowrap">${r.kh}</td><td style="white-space:nowrap">${r.san}</td><td style="white-space:nowrap">${r.soTien||''}</td><td>${ptPill(r.status)}</td>

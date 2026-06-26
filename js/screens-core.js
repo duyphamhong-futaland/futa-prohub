@@ -410,7 +410,7 @@ function ycdchBody(){
   const c=k=>list.filter(y=>y.status===k).length;
   return `<div style="display:flex;align-items:center;flex-wrap:wrap;background:#eef4ff;border:1px solid #d8e6fb;border-radius:8px;padding:12px 16px;margin-bottom:14px;font-size:12.5px">
     ${statChip('Tổng',list.length,'#dbe7ff')}${statChip('Chờ ĐVBH XN',c('cho_xn'),'#FFE6C7')}${statChip('ĐVBH đã XN',0,'#FFF3D6')}${statChip('Giữ chỗ thành công',c('giu_cho'),'#FBC9C9')}${statChip('Đã ráp UT',c('da_rap'),'#DDD')}${statChip('Đề nghị hủy giữ chỗ',c('huy'),'#FFE2B8')}${statChip('Đã hoàn hủy chỗ',c('da_hoan'),'#D6F0DD')}
-    <span style="margin-left:auto;display:flex;gap:18px"><a href="#" onclick="return false">⇄ Quy trình đặt chỗ &amp; thu tiền</a></span></div>
+    <span style="margin-left:auto;display:flex;gap:18px"><a href="#" onclick="return gotoQuytrinh()">⇄ Quy trình đặt chỗ &amp; thu tiền</a></span></div>
     <div style="overflow:auto"><table class="tbl"><thead><tr>
       <th>STT</th><th>Mã ⇅</th><th>Mã ERP</th><th>Mã PT</th><th>Trạng thái PT</th><th>Số tiền</th><th>Khách hàng ⇅</th><th>Số điện thoại</th><th>CCCD/HC</th><th>Tư vấn viên ⇅</th><th>Sàn</th><th>ĐVBH</th><th>Thời gian ⇅</th><th>Trạng thái ⇅</th><th>Hành động</th></tr></thead>
       <tbody>${list.map((r,i)=>`<tr><td>${i+1}</td><td class="code" onclick="openYCDCH('${r.ma}')">${r.ma}</td><td>${r.erp||''}</td><td>${r.pt||''}</td><td>${r.ttpt||''}</td><td>${r.tien||''}</td><td>${r.kh}</td><td>${r.sdt}</td><td>${r.cccd}</td><td>${r.tvv}</td><td>${r.san}</td><td>${r.dvbh}</td><td>${r.tg}</td><td>${stPill(ycLabel('YCDCH_ST',r.status))}</td>
@@ -419,6 +419,21 @@ function ycdchBody(){
 }
 function confirmHoldUI(ma){ const r=Workflow.confirmHold(ma); toast(r.msg, r.ok?'':'err'); if(r.ok) App.rerender(); }
 
+function printYCDCH(ma){
+  const r=Store.get().ycdch.find(x=>x.ma===ma); if(!r){ toast('Không tìm thấy phiếu','err'); return; }
+  const c=r.customerId?Store.customer(r.customerId):null;
+  const kv=(k,v)=>`<div class="kv"><b>${k}</b><div>${esc(v||'…')}</div></div>`;
+  const body=`<h1>Phiếu yêu cầu tư vấn / Đăng ký nguyện vọng</h1>
+    <div class="center muted">Mã yêu cầu: <b>${esc(r.ma)}</b> · Trạng thái: ${esc(ycLabel('YCDCH_ST',r.status))}</div>
+    <h2>Thông tin nhân viên</h2>${kv('Tư vấn viên',r.tvv)}${kv('Sàn / ĐVBH',r.dvbh||r.san)}
+    <h2>Thông tin khách hàng</h2>
+    ${kv('Họ và tên',r.kh)}${kv('Giới tính',c&&c.gender)}${kv('Ngày sinh',c&&c.dob)}${kv('Điện thoại',r.sdt)}${kv('Địa chỉ Email',c&&c.email)}
+    ${kv('Số CCCD/Hộ chiếu',r.cccd+(c&&c.ngayCap?(' · cấp ngày '+c.ngayCap):''))}${kv('Nơi cấp',c&&c.noiCap)}
+    ${kv('Địa chỉ thường trú',c&&c.diaChi)}${kv('Địa chỉ thường trú (sau sáp nhập)',c&&c.diaChiMoi)}${kv('Địa chỉ liên lạc',c&&c.diaChiLienLac)}
+    <h2>Thông tin sản phẩm</h2>${kv('Dự án','Dự án đào tạo Đợt 1')}${kv('Mã sản phẩm',r.productMa)}${kv('Số tiền đăng ký',(r.tien||'100.000.000')+' VNĐ')}
+    <div class="sign"><div>ĐẠI DIỆN BÊN BÁN<br><span style="font-weight:400">(Ký, ghi rõ họ tên)</span></div><div>KHÁCH HÀNG<br><span style="font-weight:400">(Ký, ghi rõ họ tên)</span></div></div>`;
+  printDoc('Phiếu yêu cầu — '+r.ma, body);
+}
 function openYCDCH(ma){
   const r=Store.get().ycdch.find(x=>x.ma===ma)||Store.get().ycdch[0]; if(!r) return;
   const cust=r.customerId?Store.customer(r.customerId):null;
@@ -430,7 +445,7 @@ function openYCDCH(ma){
    <div class="modal" style="width:860px">
     <div class="modal-h"><b>THÔNG TIN YÊU CẦU — ${r.ma}</b><button class="x" onclick="closeModal()">×</button></div>
     <div class="modal-b" style="max-height:75vh;overflow:auto">
-      <div style="text-align:right;margin-bottom:6px"><a href="#" onclick="toast('Đang in chứng từ...');return false">🖨 In chứng từ</a> &nbsp; <a href="#" onclick="return false">⬇</a></div>
+      <div style="text-align:right;margin-bottom:6px"><a href="#" onclick="printYCDCH('${r.ma}');return false">🖨 In chứng từ</a></div>
       ${kv('Mã yêu cầu:',r.ma)}${kv('Trạng thái:',stPill(ycLabel('YCDCH_ST',r.status)))}
       ${sec('Thông tin nhân viên')}${kv('Tư vấn viên:',r.tvv)}${kv('Số CCCD/ Hộ chiếu:',r.cccd)}
       ${sec('Thông tin khách hàng')}
@@ -455,7 +470,7 @@ function ycdcoBody(){
   const f=Filt.st('detail');
   const list=Store.get().ycdco.filter(y=>Perm.inScope(y.dvbh) && Filt.any(f.q, y.ma, y.kh, y.sdt, y.tvv, y.dvbh, y.productMa, y.hd));
   return `<div style="display:flex;align-items:center;background:#eef4ff;border:1px solid #d8e6fb;border-radius:8px;padding:12px 16px;margin-bottom:14px">
-    <b style="color:var(--orange);font-size:14px">${list.length} yêu cầu</b><a href="#" onclick="return false" style="margin-left:auto">⇄ Quy trình đặt cọc &amp; thu tiền</a></div>
+    <b style="color:var(--orange);font-size:14px">${list.length} yêu cầu</b><a href="#" onclick="return gotoQuytrinh()" style="margin-left:auto">⇄ Quy trình đặt cọc &amp; thu tiền</a></div>
     <div style="overflow:auto"><table class="tbl"><thead><tr><th>STT</th><th>Mã ⇅</th><th>Số HĐ</th><th>Mã SP</th><th>Khách hàng ⇅</th><th>Số điện thoại</th><th>Tư vấn viên ⇅</th><th>Sàn</th><th>ĐVBH</th><th>Thời gian ⇅</th><th>Trạng thái ⇅</th><th>Hành động</th></tr></thead>
     <tbody>${list.map((r,i)=>`<tr><td>${i+1}</td><td class="code">${r.ma}</td><td>${r.hd?`<span class="code">${r.hd}</span>`:''}</td><td>${r.productMa?`<span class="code" onclick="openProduct('${r.productMa}')">${r.productMa}</span>`:''}</td><td>${r.kh}</td><td>${r.sdt}</td><td>${r.tvv}</td><td>${r.san}</td><td>${r.dvbh}</td><td>${r.tg}</td><td>${stPill(ycLabel('YCDCO_ST',r.status))}</td>
       <td style="text-align:center">${r.status==='cho_kt'&&r.productMa&&Perm.can('accounting.approve')?`<span style="color:#1f9d3d;cursor:pointer;font-weight:600" onclick="runWF('confirmcoc','${r.productMa}')">XN cọc</span>`:'_'}</td></tr>`).join('')||`<tr><td colspan="12" style="text-align:center;color:#9aa3af;padding:40px">Không có YCDCO</td></tr>`}</tbody></table></div>

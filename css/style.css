@@ -25,7 +25,11 @@ a{color:var(--blue2);text-decoration:none}
 .login-brand{display:flex;align-items:center;gap:14px;margin-bottom:26px;z-index:1}
 /* Logo thật FUTA Land (đặt trên chip trắng vì wordmark xanh lá) */
 .login-logo-img{height:118px;width:auto;background:#fff;border-radius:16px;padding:16px 30px;box-shadow:0 14px 38px rgba(0,0,0,.20)}
-.tb-logo-img{height:40px;width:auto;background:#fff;border-radius:9px;padding:3px 10px}
+/* Emblem Phương Trang cắt từ logo gốc (CSS-crop) — chip trắng trên topbar xanh */
+.tb-emblem{flex-shrink:0;width:40px;height:44px;border-radius:7px;background:#fff url("../img/logo-futa-land.png") no-repeat;background-size:154px 87px;background-position:-2px -22px}
+.tb-word{color:#fff;line-height:1.15;margin-left:2px}
+.tb-word b{font-size:15px;font-weight:800;letter-spacing:.2px}
+.tb-word small{display:block;font-size:6.5px;letter-spacing:1.4px;opacity:.9}
 @media(max-width:760px){ .login-logo-img{height:84px;padding:12px 20px} }
 .logo-box{background:#fff;border:2px solid #C8102E;border-radius:6px;padding:6px 8px;line-height:1;text-align:center}
 .logo-box b{color:#1B7F3B;font-size:18px;font-style:italic;letter-spacing:-1px}

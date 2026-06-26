@@ -50,6 +50,22 @@ function buildSchedule(product, paidFirst){
     return [d.stt, da>0?'PT-LK'+d.stt:'-', d.stt, d.mo, d.han||'', d.tyLe+'%', fmtVN(d.soTien), da>0?fmtVN(da):'-', fmtVN(d.soTien-da), '', i===3];
   });
 }
+/* In tiến độ thanh toán của hợp đồng đang xem (curHD) */
+function printSchedule(){
+  const st=Store.get(); const type=curHD.type||'coc';
+  const arr=type==='mb'?st.hdMB:type==='cn'?st.hdCN:st.hdCoc;
+  const c=(arr||[]).find(x=>x.so===curHD.so)||(arr||[])[0];
+  if(!c){ toast('Không tìm thấy hợp đồng','err'); return; }
+  const p=Store.product(c.sp); const tong=p?(p.giaVAT||p.giaCB):0;
+  const sched=Pricing.installments(tong, Pricing.DEFAULT_DOT);
+  const rows=sched.map(d=>`<tr><td>${d.stt}</td><td>${esc(d.mo)}</td><td>${esc(d.han||'')}</td><td class="right">${d.tyLe}%</td><td class="right">${fmtVN(d.soTien)}</td></tr>`).join('');
+  const body=`<h1>Tiến độ thanh toán</h1>
+    <div class="center muted">Hợp đồng ${esc(c.so)}${c.ten?(' — '+esc(c.ten)):''} · Mã căn ${esc(c.sp||'')}</div>
+    <table><thead><tr><th>Đợt</th><th>Mô tả</th><th>Hạn TT</th><th class="right">Tỉ lệ</th><th class="right">Số tiền (VNĐ)</th></tr></thead>
+      <tbody>${rows}</tbody>
+      <tfoot><tr><th colspan="4" class="right">Tổng giá trị</th><th class="right">${fmtVN(tong)}</th></tr></tfoot></table>`;
+  printDoc('Tiến độ thanh toán — '+c.so, body);
+}
 function contractDetailDynamic(type){
   const st=Store.get();
   let c, backRoute, title, leftBtns;
@@ -105,7 +121,7 @@ function contractDetailDynamic(type){
        <div style="padding:12px 4px;margin-right:30px;border-bottom:2px solid var(--blue);color:var(--blue);font-weight:700">Lịch sử thanh toán</div>
        <div style="padding:12px 4px;margin-right:30px;color:#5b6573;cursor:pointer" onclick="toast('Danh sách phiếu tính lãi')">Danh sách phiếu tính lãi</div>
        <div style="flex:1"></div>
-       <a href="#" style="color:var(--blue);font-weight:600;white-space:nowrap" onclick="toast('In tiến độ thanh toán');return false">🖨 In Tiến độ thanh toán</a>
+       <a href="#" style="color:var(--blue);font-weight:600;white-space:nowrap" onclick="printSchedule();return false">🖨 In Tiến độ thanh toán</a>
      </div>
      <div style="overflow:auto"><table class="tbl"><thead>${payHead}</thead><tbody>${payBody}</tbody></table></div>
      <div style="background:#eaf2ff;border:1px solid #d8e6fb;border-radius:0 0 8px 8px;padding:14px 20px;margin-top:-1px">
