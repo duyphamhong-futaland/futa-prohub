@@ -66,7 +66,46 @@ const POL = (function () {
     },
   ];
 
-  /* CK theo phương thức thanh toán cho C5B (FUTA Kim Phát) — phục vụ auto-điền HĐMB */
+  /* Bảng % chính sách "máy đọc được" (đối chứng file 22/06/2026) — công thức giá ăn theo đây.
+     methods = phương thức thanh toán (CK trên giá trước VAT). muaSi = chiết khấu theo số căn. */
+  const RATES = {
+    residence: {
+      methods: [{ key: 'thuong', label: 'Tiêu chuẩn', pct: 0 }, { key: 'nhanh95', label: 'Nhanh 95%', pct: 0.10 }],
+      muaSi: [{ min: 3, pct: 0.04 }, { min: 2, pct: 0.02 }], thanThiet: 0.01, htls: '12 tháng',
+    },
+    c5b: {
+      methods: [{ key: 'chuan', label: 'PTTT chuẩn (không vay)', pct: 0.03 }, { key: 'nhanh', label: 'Thanh toán nhanh', pct: 0.06 },
+                { key: 'nhanh70', label: 'Nhanh 70%', pct: 0.10 }, { key: 'vay', label: 'Khách vay NH', pct: 0 }],
+      muaSi: [{ min: 3, pct: 0.02 }, { min: 2, pct: 0.01 }], thanThiet: 0.01, diaPhuong: 0.01, ngoaiGiao: 0.05, htls: '12 tháng',
+    },
+    kiman: {
+      methods: [{ key: 'thuong', label: 'Tiêu chuẩn', pct: 0 }, { key: 'nhanh50', label: 'Nhanh 50%', pct: 0.05 },
+                { key: 'nhanh70', label: 'Nhanh 70%', pct: 0.07 }, { key: 'nhanh95', label: 'Nhanh 95%', pct: 0.09 }],
+      muaSi: [{ min: 10, pct: 0.05 }, { min: 5, pct: 0.05 }, { min: 3, pct: 0.02 }, { min: 2, pct: 0.01 }],
+      thanThiet: 0.01, ngoaiGiao: 0.05, htls: '12 tháng',
+    },
+  };
+
+  function byKey(k) { return PROJECTS.find(p => p.key === k); }
+  function byName(name) {
+    if (!name) return null;
+    const s = String(name).toLowerCase();
+    if (/kim ph[áa]t|c5b/.test(s)) return byKey('c5b');
+    if (/times square|residence|ct3|ct7/.test(s)) return byKey('residence');
+    if (/kim an|h\s*&\s*a|h&a/.test(s)) return byKey('kiman');
+    return null;
+  }
+  function rates(k) { return RATES[k] || null; }
+  function methods(k) { return (RATES[k] || {}).methods || []; }
+  function discount(k, methodKey) {
+    return methods(k).find(m => m.key === methodKey) || { key: '', label: '', pct: 0 };
+  }
+  function muaSiPct(k, soCan) {
+    const hit = ((RATES[k] || {}).muaSi || []).find(x => (soCan || 0) >= x.min);
+    return hit ? hit.pct : 0;
+  }
+
+  /* CK theo phương thức cho C5B — phục vụ auto-điền HĐMB (giữ tương thích) */
   function c5bDiscount(method) {
     switch (method) {
       case 'chuan': return { pct: 0.03, label: 'PTTT chuẩn (không vay)', note: 'CK 3% trước VAT · TT 30% GTHĐ (gồm VAT) đúng tiến độ đợt 1' };
@@ -76,9 +115,7 @@ const POL = (function () {
     }
   }
 
-  function byKey(k) { return PROJECTS.find(p => p.key === k); }
-
-  return { UPDATED, PROJECTS, c5bDiscount, byKey };
+  return { UPDATED, PROJECTS, RATES, c5bDiscount, byKey, byName, rates, methods, discount, muaSiPct };
 })();
 
 /* ---- Màn "Chính sách đang áp dụng (đối chứng)" ---- */

@@ -218,10 +218,17 @@ SCREENS["hd-no-lai"]=()=>{ Filt.reg('nolai',noLaiResults); return `
 
 /* ---- báo cáo hợp đồng dự án (từ sản phẩm có khách) ---- */
 function baocaoRows(){
+  const projs=Store.get().projects||[];
   return Store.products().filter(p=>p.khName).map(p=>{
-    const ck1=Math.round((p.giaCB||0)*0.01), ck2=Math.round((p.giaCB||0)*0.02);
+    // mức mua sỉ theo chính sách thật của dự án (POL); fallback 1%/2% nếu chưa gắn
+    let r1=0.01, r2=0.02;
+    if(typeof POL!=='undefined'){
+      const proj=projs.find(x=>x.id===p.duAnId); const pol=POL.byName(proj&&proj.ten);
+      if(pol){ const ms=(POL.rates(pol.key).muaSi||[]).slice().sort((a,b)=>a.min-b.min); if(ms[0])r1=ms[0].pct; if(ms[1])r2=ms[1].pct; }
+    }
+    const ck1=Math.round((p.giaCB||0)*r1), ck2=Math.round((p.giaCB||0)*r2);
     const cust=p.customerId?Store.customer(p.customerId):null;
-    return [p.khName, (cust&&cust.phone)||'', (cust&&cust.email)||'', p.ma, pLabel(p.status), fmtVN(p.giaCB), '1%', fmtVN(ck1), '2%', fmtVN(ck2)];
+    return [p.khName, (cust&&cust.phone)||'', (cust&&cust.email)||'', p.ma, pLabel(p.status), fmtVN(p.giaCB), (+(r1*100).toFixed(2))+'%', fmtVN(ck1), (+(r2*100).toFixed(2))+'%', fmtVN(ck2)];
   });
 }
 function baocaoResults(){

@@ -186,7 +186,15 @@ function openProduct(ma, mode){
   const p=Store.product(ma); if(!p){ toast('Không tìm thấy sản phẩm','err'); return; }
   window._openProductMa = ma;
   const st=CFG.PSTATUS[p.status]||{};
-  const bd=Pricing.breakdown(p.giaVAT||p.giaCB, p.ttuy, {});
+  // Chiết khấu ăn theo chính sách thật (POL) của dự án — file-based, sửa policies.js là đổi
+  const _proj=(Store.get().projects||[]).find(x=>x.id===p.duAnId);
+  let _pol=(typeof POL!=='undefined')?POL.byName(_proj&&_proj.ten):null, _polDemo=false;
+  if(!_pol && typeof POL!=='undefined'){ _pol=POL.byKey('c5b'); _polDemo=true; }  // dự án demo → tham chiếu C5B
+  const _ms=_pol?POL.methods(_pol.key):[];
+  const _method=(window._ckMethod && _ms.some(m=>m.key===window._ckMethod))?window._ckMethod:(_ms[0]?_ms[0].key:'');
+  const _ckInfo=_pol?POL.discount(_pol.key,_method):{pct:0,label:''};
+  const _ckAmount=Math.round((p.giaCB||0)*(_ckInfo.pct||0));
+  const bd=Pricing.breakdown(p.giaVAT||p.giaCB, p.ttuy, {khac:_ckAmount});
   const base=[['Mã BĐS',ma],['Loại sản phẩm',p.loai],['Trạng thái',pPill(p.status)],
      ['Diện tích thông thủy',(p.ttuy||0)+' m²'],['Diện tích tim tường',(p.tim||0)+' m²'],
      ['Hướng',p.huong],['Hướng cửa chính',p.cua],
@@ -195,8 +203,18 @@ function openProduct(ma, mode){
   const cust = p.khName ? [['Khách hàng',p.khName],['Tư vấn viên',p.tvv||'—'],['ĐVBH',p.dvbh||'—']] : [];
   // cơ cấu giá
   const crow=(k,v)=>`<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:12px;border-bottom:1px dashed #eef1f5"><span style="color:#5b6573">${k}</span><span style="font-weight:600">${v}</span></div>`;
+  const polBlock = _pol ? `<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:10px 0 4px;font-size:12px">
+      <span style="color:#5b6573">Phương thức / chính sách:</span>
+      <select onchange="window._ckMethod=this.value;openProduct('${ma}','${mode||''}')" style="padding:5px 8px;border:1px solid #d6dce6;border-radius:6px;font-size:12px">
+        ${_ms.map(m=>`<option value="${m.key}"${m.key===_method?' selected':''}>${m.label} (${m.pct?(+(m.pct*100).toFixed(2)+'% CK'):'không CK'})</option>`).join('')}
+      </select>
+      ${_polDemo?`<span style="color:#b5640f">· demo → tham chiếu ${_pol.name}</span>`:`<span style="color:#1f9d3d">· ${_pol.name}</span>`}
+    </div>
+    ${_ckAmount?crow('(4) Chiết khấu chính sách ('+(+(_ckInfo.pct*100).toFixed(2))+'%)','− '+fmtMoney(_ckAmount)):''}
+    ${crow('(5) Giá phải thanh toán (sau CK)',fmtMoney(bd.giaPhaiTT))}` : '';
   const coCau=`<div class="section-title" style="font-size:13px;margin-top:14px">Cơ cấu giá (đúng công thức Excel)</div>
     ${crow('Giá niêm yết (gồm VAT & KPBT)',fmtMoney(bd.giaNiemYet))}
+    ${polBlock}
     ${crow('(6) QSD đất phân bổ (461.505 × DTTT)',fmtMoney(bd.qsd))}
     ${crow('(7) KPBT 2%',fmtMoney(bd.kpbt))}
     ${crow('(8) Giá trị căn hộ',fmtMoney(bd.giaTriCan))}

@@ -142,7 +142,9 @@ const C5BTpl = (function () {
     let note = '';
     if ((group === 'hdmb' || group === 'coc') && typeof POL !== 'undefined') {
       const ck = POL.c5bDiscount(tpl.payment);
-      if (ck && ck.label) note = 'CS: ' + ck.label + (ck.pct ? ' · CK ' + (ck.pct * 100) + '%' : ' · không CK');
+      const fv = typeof fmtVN === 'function' ? fmtVN : (x => x);
+      const amt = ck.pct ? Math.round((p ? (p.giaCB || 0) : 0) * ck.pct) : 0;
+      if (ck && ck.label) note = 'CS: ' + ck.label + (ck.pct ? ' · CK ' + (ck.pct * 100) + '% = ' + fv(amt) + 'đ' : ' · không CK');
     }
     openPrint(tpl.id, dataFrom(c, p, cust), group, note);
     typeof toast === 'function' && toast('Mở mẫu: ' + tpl.name);
