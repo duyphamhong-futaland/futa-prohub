@@ -224,6 +224,7 @@ function openProduct(ma, mode){
   // hành động
   let actionsHTML;
   if(mode==='book'||mode==='register'){
+    clearCccdDraft();
     actionsHTML = bookFormHTML(ma, mode, p);
   } else {
     const acts=Workflow.nextActions(p);
@@ -326,26 +327,54 @@ function queuePanelHTML(p){
     ${rows}
     <div class="modal-actions" style="justify-content:flex-start;margin-top:10px">${acts.join('')}</div>`;
 }
+const CCCD_SIDES=['Mặt trước CCCD','Mặt sau CCCD','Căn cước điện tử'];
+function clearCccdDraft(){ const st=Store.get(); if(st&&st.attachments){ CCCD_SIDES.forEach(t=>{ delete st.attachments['cccd:draft:'+t]; }); Store.save(); } }
 function bookFormHTML(ma, mode, p){
-  const title = mode==='book' ? 'Đặt chỗ — nhập thông tin khách hàng' : 'Đăng ký giao dịch — ráp khách';
-  const u = Perm.user()||{};
+  const title = mode==='book' ? 'Tạo khách hàng — Đặt chỗ (giữ chỗ)' : 'Tạo khách hàng — Đăng ký giao dịch';
+  const u = (Perm.user&&Perm.user())||{};
   const dvbhDefault = u.dvbh || (p.dvbh||'');
-  return `<hr class="soft"><div class="section-title" style="font-size:13px">${title}</div>
-    ${frow('Họ và tên KH',1,inpId('bkName', p.khName||'', 'Nhập tên khách hàng'))}
-    ${frow('Số điện thoại',1,inpId('bkPhone','', '09xx xxx xxx'))}
-    ${frow('CCCD/Hộ chiếu',0,inpId('bkCccd','', 'Số CCCD'))}
+  const sub=t=>`<div class="section-title" style="font-size:12.5px;color:var(--blue2);margin:15px 0 6px">${t}</div>`;
+  const upd=t=>Uploader.imageBox('cccd:draft:'+t, t);
+  return `<hr class="soft"><div class="section-title" style="font-size:13px">${title} — căn ${ma}</div>
+    ${sub('Thông tin nhân viên')}
     ${frow('Tư vấn viên',0,inpId('bkTvv', u.name||'', 'TVV'))}
     ${frow('Đơn vị bán hàng',0,selId('bkDvbh', Store.get().dvbhList.slice().concat(dvbhDefault&&Store.get().dvbhList.indexOf(dvbhDefault)<0?[dvbhDefault]:[])))}
-    <div class="modal-actions">
+    ${sub('Thông tin khách hàng')}
+    ${frow('Họ và tên',1,inpId('bkName', p.khName||'', 'NGUYỄN VĂN A'))}
+    ${frow('Giới tính',0,selId('bkGender',['Nam','Nữ','Khác']))}
+    ${frow('Ngày sinh',0,inpId('bkDob','', 'DD/MM/YYYY'))}
+    ${frow('Điện thoại',1,inpId('bkPhone','', '09xx xxx xxx'))}
+    ${frow('Địa chỉ Email',0,inpId('bkEmail','', 'vd@email.com'))}
+    ${frow('Số CCCD/Hộ chiếu',0,inpId('bkCccd','', 'Số CCCD/Hộ chiếu'))}
+    ${frow('Ngày cấp',0,inpId('bkCccdNgay','', 'DD/MM/YYYY'))}
+    ${frow('Nơi cấp',0,inpId('bkCccdNoi','Cục Cảnh sát QLHC về TTXH', ''))}
+    ${frow('Địa chỉ thường trú',0,inpId('bkTT','', 'Số nhà, đường, phường/xã, tỉnh'))}
+    ${frow('Địa chỉ thường trú (sau sáp nhập)',0,inpId('bkTTmoi','', ''))}
+    ${frow('Địa chỉ liên lạc',0,inpId('bkLL','', ''))}
+    ${sub('CC/CCCD/Hộ chiếu')}
+    <div style="display:flex;gap:12px;flex-wrap:wrap">${upd('Mặt trước CCCD')}${upd('Mặt sau CCCD')}${upd('Căn cước điện tử')}</div>
+    <div class="modal-actions" style="margin-top:14px">
       <button class="btn btn-primary" onclick="submitBooking('${ma}','${mode}')">${mode==='book'?'Tạo phiếu giữ chỗ':'Tạo YCDCO'}</button>
       <button class="btn btn-ghost" onclick="openProduct('${ma}')">Hủy</button>
     </div>`;
 }
 function submitBooking(ma, mode){
   const v=id=>{const e=document.getElementById(id);return e?e.value.trim():'';};
-  const data={kh:v('bkName'), sdt:v('bkPhone'), cccd:v('bkCccd'), tvv:v('bkTvv'), dvbh:v('bkDvbh')};
-  if(!data.kh){ toast('Vui lòng nhập tên khách hàng','warn'); return; }
-  runWF(mode, ma, data);
+  const data={kh:v('bkName'), gender:v('bkGender'), dob:v('bkDob'), sdt:v('bkPhone'), email:v('bkEmail'),
+    cccd:v('bkCccd'), ngayCap:v('bkCccdNgay'), noiCap:v('bkCccdNoi'),
+    diaChi:v('bkTT'), diaChiMoi:v('bkTTmoi'), diaChiLienLac:v('bkLL'),
+    tvv:v('bkTvv'), dvbh:v('bkDvbh')};
+  if(!data.kh){ toast('Vui lòng nhập họ và tên khách hàng','warn'); return; }
+  if(!data.sdt){ toast('Vui lòng nhập số điện thoại','warn'); return; }
+  const r=Workflow.run(mode, ma, data);
+  if(r.ok){
+    // gắn ảnh CCCD (đang ở slot nháp) vào phiếu YCDCH vừa tạo
+    let yc=(mode==='book')?r.code:null;
+    if(!yc){ const q=((Store.product(ma)||{}).queue||[])[0]; yc=q&&q.ycdchMa; }
+    if(yc) CCCD_SIDES.forEach(t=>{ (Store.attachments('cccd:draft:'+t)||[]).forEach(rec=>Store.addAttachment('ycdch:'+yc+':'+t, rec)); });
+    clearCccdDraft();
+    toast(r.msg); closeModal(); App.rerender();
+  } else toast(r.msg,'err');
 }
 
 /* ---- YCDCH ---- */
@@ -381,7 +410,9 @@ function openYCDCH(ma){
       ${sec('Thông tin khách hàng')}
       ${kv('Họ và tên:',`<b>${r.kh}</b>`)}${kv('Giới tính:',(cust&&cust.gender)||'')}${kv('Ngày sinh:',(cust&&cust.dob)||'')}${kv('Điện thoại:',r.sdt)}${kv('Địa chỉ Email:',(cust&&cust.email)||'')}
       ${kv('Số CCCD/ Hộ chiếu:',r.cccd+((cust&&cust.ngayCap)?(' &nbsp;&nbsp; Ngày cấp: '+cust.ngayCap):''))}${kv('Nơi cấp:',(cust&&cust.noiCap)||'')}
-      ${kv('Địa chỉ thường trú:',(cust&&cust.diaChi)||'Việt Nam')}
+      ${kv('Địa chỉ thường trú:',(cust&&cust.diaChi)||'')}
+      ${kv('Địa chỉ thường trú (sau sáp nhập):',(cust&&cust.diaChiMoi)||'')}
+      ${kv('Địa chỉ liên lạc:',(cust&&cust.diaChiLienLac)||'')}
       ${sec('CC/CCCD/Hộ chiếu')}<div style="display:flex;gap:14px">${up('Mặt trước CCCD')}${up('Mặt sau CCCD')}${up('Căn cước điện tử')}</div>
       ${sec('Thông tin dự án')}${kv('Loại bất động sản:','Căn hộ')}${kv('Dự án:','Dự án đào tạo Đợt 1')}${kv('Sản phẩm:',r.productMa||'—')}${kv('Số tiền đăng ký:',(r.tien||'100.000.000')+' VNĐ')}
       <div class="modal-actions">

@@ -9,9 +9,13 @@ const Workflow = (function(){
   const now = ()=> new Date().toLocaleString("vi-VN");
   /* chặn quyền ngay tại tầng logic (không chỉ ẩn nút ở UI) */
   function deny(cap){ return (typeof Perm!=="undefined" && !Perm.can(cap)) ? err("Bạn không có quyền thực hiện thao tác này") : null; }
+  function custExtra(d){ d=d||{}; return {phone:d.sdt, cccd:d.cccd, gender:d.gender, dob:d.dob, email:d.email,
+    ngayCap:d.ngayCap, noiCap:d.noiCap, diaChi:d.diaChi, diaChiMoi:d.diaChiMoi, diaChiLienLac:d.diaChiLienLac}; }
   function ensureCustomer(st, name, extra){
+    extra = extra || {};
     let c = st.customers.find(x=>x.name===name);
-    if(!c){ c = Object.assign({id:"C"+(st.customers.length+1)+"_"+Date.now().toString(36), name}, extra||{}); st.customers.push(c); }
+    if(!c){ c = Object.assign({id:"C"+(st.customers.length+1)+"_"+Date.now().toString(36), name}, extra); st.customers.push(c); }
+    else { Object.keys(extra).forEach(k=>{ if(extra[k]!=null && extra[k]!=='') c[k]=extra[k]; }); }  // cập nhật khi đăng ký lại
     return c;
   }
 
@@ -69,7 +73,7 @@ const Workflow = (function(){
       p.queue = p.queue || [];
       if(p.queue.length >= CFG.QUEUE.maxPriority) return err("Hàng đợi đã đầy ("+CFG.QUEUE.maxPriority+" ưu tiên)");
       if(p.queue.some(c=>c.dvbh===d.dvbh && c.kh===d.kh)) return err("Khách/ĐVBH này đã ở trong hàng đợi");
-      const c = ensureCustomer(st, d.kh, {phone:d.sdt, cccd:d.cccd});
+      const c = ensureCustomer(st, d.kh, custExtra(d));
       const code = Store.nextCode("ycdch","Test-YCDCH-",5);
       st.ycdch.unshift({ma:code, productMa:ma, erp:"", pt:"", ttpt:"", tien:"",
         customerId:c.id, kh:d.kh, sdt:d.sdt||c.phone||"", cccd:d.cccd||c.cccd||"",
@@ -106,7 +110,7 @@ const Workflow = (function(){
       let claim = p.queue[0];
       if(!claim){
         const khName = d.kh || p.khName; if(!khName) return err("Chưa có khách trong hàng đợi");
-        const c = ensureCustomer(st, khName, {phone:d.sdt, cccd:d.cccd});
+        const c = ensureCustomer(st, khName, custExtra(d));
         const yc = Store.nextCode("ycdch","Test-YCDCH-",5);
         st.ycdch.unshift({ma:yc, productMa:ma, customerId:c.id, kh:khName, sdt:d.sdt||c.phone||"", cccd:d.cccd||"",
           tvv:d.tvv||"", san:d.dvbh||"", dvbh:d.dvbh||"", tg:now(), status:"giu_cho"});
