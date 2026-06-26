@@ -222,20 +222,17 @@ function openProduct(ma, mode){
     ${crow('(10) Giá bán chưa VAT',fmtMoney(bd.giaChuaVAT))}
     <div style="display:flex;justify-content:space-between;padding:7px 0;font-weight:700;color:var(--blue)"><span>Tổng giá phải thanh toán</span><span>${fmtMoney(bd.tong)}</span></div>`;
   // hành động
-  let actionsHTML;
+  let actionsHTML='', priorityHTML='';
   if(mode==='book'||mode==='register'){
     clearCccdDraft();
     actionsHTML = bookFormHTML(ma, mode, p);
   } else {
     const acts=Workflow.nextActions(p);
     const showQueue = ['mo_ban','giu_cho','dang_ky'].indexOf(p.status)>=0 || (p.queue&&p.queue.length);
-    const qp = showQueue ? queuePanelHTML(p) : '';
-    const btns = (acts.length || !qp)
-      ? `<div class="modal-actions">${acts.length
-            ? acts.map(a=>`<button class="btn ${a.cls}" onclick="onProductAction('${ma}','${a.key}')">${a.label}</button>`).join('')
-            : (qp?'':'<span style="color:#9aa3af;font-size:12px">Không có hành động khả dụng cho trạng thái «'+st.label+'» với vai trò hiện tại.</span>')}</div>`
-      : '';
-    actionsHTML = qp + btns;
+    priorityHTML = showQueue ? queuePanelHTML(p) : '';   // Ưu Tiên 1/2/3 (dropdown) — đặt ở ĐẦU như bản gốc
+    actionsHTML = acts.length
+      ? `<div class="modal-actions">${acts.map(a=>`<button class="btn ${a.cls}" onclick="onProductAction('${ma}','${a.key}')">${a.label}</button>`).join('')}</div>`
+      : (priorityHTML?'':`<div class="modal-actions"><span style="color:#9aa3af;font-size:12px">Không có hành động khả dụng cho trạng thái «${st.label}» với vai trò hiện tại.</span></div>`);
   }
   // lịch sử
   const hist = (p.history&&p.history.length)
@@ -246,6 +243,7 @@ function openProduct(ma, mode){
    <div class="modal">
     <div class="modal-h"><b>Chi tiết sản phẩm — ${ma}</b><button class="x" onclick="closeModal()">×</button></div>
     <div class="modal-b" style="max-height:80vh;overflow:auto">
+      ${priorityHTML}
       <div class="section-title" style="font-size:13px">Thông tin sản phẩm</div>
       ${base.concat(cust).map(r=>`<div class="pinfo"><div class="k">${r[0]}</div><div class="v">${r[1]}</div></div>`).join('')}
       ${coCau}
@@ -306,26 +304,54 @@ function submitTransfer(ma){
   const kh=v('tfName'); if(!kh){ toast('Nhập tên khách nhận chuyển nhượng','warn'); return; }
   runWF('transfer', ma, {kh, sdt:v('tfPhone'), cccd:v('tfCccd'), email:v('tfEmail')});
 }
-/* ---- panel HÀNG ĐỢI ƯU TIÊN (Ưu Tiên 1/2/3 + đếm ngược + thao tác) ---- */
+/* ---- Ưu Tiên 1/2/3 (dropdown Chọn YCDCH) — đặt ở ĐẦU chi tiết SP như bản gốc.
+   Liên kết với "Tạo khách hàng": book tạo YCDCH → hiện trong dropdown để ráp ưu tiên ---- */
 function queuePanelHTML(p){
-  const q=p.queue||[]; const canBook=Perm.can('booking');
+  const ma=p.ma, q=p.queue||[], canBook=Perm.can('booking');
+  const editable = canBook && ['mo_ban','giu_cho','dang_ky'].indexOf(p.status)>=0;
+  // YCDCH khả dụng cho căn này (chờ ĐVBH xác nhận / đã giữ chỗ, chưa ráp)
+  const avail = Store.get().ycdch.filter(y=>y.productMa===ma && ['cho_xn','giu_cho'].indexOf(y.status)>=0);
   const counting=(p.status==='giu_cho'||p.status==='dang_ky') && p.holdUntil;
-  const rows = q.length ? q.map((c,i)=>{
-    const cd=(i===0 && counting)?` · còn <b data-countdown="${p.holdUntil}" style="color:var(--red)">${Queue.fmt(Queue.remaining(p))}</b>`:'';
-    const tag=(i===0 && p.status==='dang_ky')?' <span style="color:var(--orange);font-weight:600">(đang đăng ký)</span>':'';
-    return `<div class="prio"><span>Ưu Tiên <span class="n">${i+1}</span></span>
-      <div style="font-size:12.5px">${c.kh} <span style="color:var(--muted)">(${c.dvbh||'—'})</span>${cd}${tag}</div></div>`;
-  }).join('') : '<div style="color:#9aa3af;font-size:12px;padding:4px 0">Chưa có ai trong hàng đợi — căn đang mở bán.</div>';
+  function slot(i){
+    const cur=q[i], curMa=cur?cur.ycdchMa:'';
+    const pool=avail.slice(); if(cur && !pool.some(y=>y.ma===curMa)) pool.unshift({ma:curMa,kh:cur.kh,dvbh:cur.dvbh});
+    const opts=['<option value="">— Chọn YCDCH —</option>'].concat(pool.map(y=>
+      `<option value="${esc(y.ma)}"${y.ma===curMa?' selected':''}>${esc(y.ma)} · ${esc(y.kh)} (${esc(y.dvbh||'—')})</option>`)).join('');
+    const cd=(i===0 && counting)?`<span style="color:var(--red);font-size:11px;white-space:nowrap">⏱ ${Queue.fmt(Queue.remaining(p))}</span>`:'';
+    const tag=(i===0 && p.status==='dang_ky')?`<span style="color:var(--orange);font-size:11px;white-space:nowrap">đang ĐK</span>`:'';
+    return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:9px">
+      <span style="white-space:nowrap;font-size:13px;color:#3a4658">Ưu Tiên <span style="display:inline-flex;width:22px;height:22px;border-radius:50%;background:var(--blue2);color:#fff;align-items:center;justify-content:center;font-weight:700;font-size:12px">${i+1}</span></span>
+      <select class="inp"${editable?'':' disabled'} onchange="assignPriority('${ma}',${i},this.value)" style="flex:1;min-width:170px">${opts}</select>${cd}${tag}</div>`;
+  }
   const acts=[];
-  if(canBook && q.length<CFG.QUEUE.maxPriority && ['mo_ban','giu_cho','dang_ky'].indexOf(p.status)>=0)
-    acts.push(`<button class="btn btn-ghost btn-sm" onclick="openProduct('${p.ma}','book')">＋ Đặt chỗ (vào hàng đợi)</button>`);
-  if(canBook && q.length && p.status==='giu_cho')
-    acts.push(`<button class="btn btn-primary btn-sm" onclick="runWF('register','${p.ma}')">Chọn KH → Đăng ký GD</button>`);
-  if(canBook && q.length && (p.status==='giu_cho'||p.status==='dang_ky'))
-    acts.push(`<button class="btn btn-ghost btn-sm" onclick="runWF('reclaim','${p.ma}')">🧺 Thu hồi</button>`);
-  return `<hr class="soft"><div style="font-weight:700;color:var(--blue2);font-size:13px;margin-bottom:8px">Hàng đợi ưu tiên (tối đa ${CFG.QUEUE.maxPriority})</div>
-    ${rows}
-    <div class="modal-actions" style="justify-content:flex-start;margin-top:10px">${acts.join('')}</div>`;
+  if(editable && q.length<CFG.QUEUE.maxPriority) acts.push(`<button class="btn btn-primary btn-sm" onclick="openProduct('${ma}','book')">＋ Tạo khách hàng (Đặt chỗ)</button>`);
+  if(canBook && q.length && p.status==='giu_cho') acts.push(`<button class="btn btn-ghost btn-sm" onclick="runWF('register','${ma}')">Chọn KH → Đăng ký GD</button>`);
+  if(canBook && q.length && (p.status==='giu_cho'||p.status==='dang_ky')) acts.push(`<button class="btn btn-ghost btn-sm" onclick="runWF('reclaim','${ma}')">🧺 Thu hồi</button>`);
+  return `<div class="section-title" style="font-size:13px;color:var(--blue2)">Ưu tiên giữ chỗ (tối đa ${CFG.QUEUE.maxPriority})</div>
+    ${slot(0)}${slot(1)}${slot(2)}
+    ${acts.length?`<div class="modal-actions" style="justify-content:flex-start;margin:8px 0 4px">${acts.join('')}</div>`:''}
+    <hr class="soft">`;
+}
+/* Gán/đổi/bỏ một YCDCH vào ô Ưu Tiên (link tạo khách hàng ↔ hàng đợi) */
+function assignPriority(ma, slotIdx, ycdchMa){
+  if(typeof Perm!=='undefined' && !Perm.guard('booking')) return;
+  Store.mutate(st=>{
+    const p=st.products.find(x=>x.ma===ma); if(!p) return;
+    p.queue=p.queue||[];
+    if(ycdchMa) p.queue=p.queue.filter(c=>c.ycdchMa!==ycdchMa);   // tránh trùng giữa các ô
+    if(!ycdchMa){ if(p.queue[slotIdx]) p.queue.splice(slotIdx,1); }
+    else {
+      const y=st.ycdch.find(x=>x.ma===ycdchMa);
+      const claim={id:'q'+Date.now().toString(36)+Math.floor(Math.random()*1e3), ycdchMa,
+        customerId:y&&y.customerId, kh:(y&&y.kh)||'', sdt:(y&&y.sdt)||'', dvbh:(y&&y.dvbh)||'', tvv:(y&&y.tvv)||'', at:Date.now()};
+      p.queue.splice(Math.min(slotIdx,p.queue.length),0,claim);
+      p.queue=p.queue.slice(0,CFG.QUEUE.maxPriority);
+    }
+    if(p.queue.length){ if(p.status==='mo_ban') p.status='giu_cho'; Queue.setHolderFromQueue(st,p); if(!p.holdUntil) Queue.startHold(p); }
+    else if(['giu_cho','dang_ky'].indexOf(p.status)>=0){ p.status='mo_ban'; p.customerId=null; p.khName=''; p.tvv=''; p.dvbh=''; Queue.clearHold(p); }
+    Store.pushHistory(p, `Ráp Ưu Tiên ${slotIdx+1}: ${ycdchMa||'(bỏ trống)'}`);
+  });
+  openProduct(ma);
 }
 const CCCD_SIDES=['Mặt trước CCCD','Mặt sau CCCD','Căn cước điện tử'];
 function clearCccdDraft(){ const st=Store.get(); if(st&&st.attachments){ CCCD_SIDES.forEach(t=>{ delete st.attachments['cccd:draft:'+t]; }); Store.save(); } }
