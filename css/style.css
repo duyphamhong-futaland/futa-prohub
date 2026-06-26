@@ -23,6 +23,10 @@ a{color:var(--blue2);text-decoration:none}
   radial-gradient(circle at 20% 30%,rgba(255,255,255,.06),transparent 40%),
   radial-gradient(circle at 80% 70%,rgba(255,255,255,.05),transparent 40%);}
 .login-brand{display:flex;align-items:center;gap:14px;margin-bottom:26px;z-index:1}
+/* Logo thật FUTA Land (đặt trên chip trắng vì wordmark xanh lá) */
+.login-logo-img{height:118px;width:auto;background:#fff;border-radius:16px;padding:16px 30px;box-shadow:0 14px 38px rgba(0,0,0,.20)}
+.tb-logo-img{height:40px;width:auto;background:#fff;border-radius:9px;padding:3px 10px}
+@media(max-width:760px){ .login-logo-img{height:84px;padding:12px 20px} }
 .logo-box{background:#fff;border:2px solid #C8102E;border-radius:6px;padding:6px 8px;line-height:1;text-align:center}
 .logo-box b{color:#1B7F3B;font-size:18px;font-style:italic;letter-spacing:-1px}
 .logo-box small{display:block;color:#C8102E;font-size:7px;font-weight:700;letter-spacing:1px}
