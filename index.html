@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FUTA Land — Prohub (Quản lý bán hàng &amp; giao dịch)</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="stylesheet" href="css/style.css?v=14">
+</head>
+<body>
+
+<!-- ====================== LOGIN ====================== -->
+<div id="login">
+  <div class="login-brand">
+    <div class="logo-box"><b>FUTA</b><small>PHƯƠNG TRANG</small></div>
+    <div class="ti"><b>FUTA Land</b><small>CHẤT LƯỢNG LÀ DANH DỰ</small></div>
+  </div>
+  <div class="login-card">
+    <label>Email hoặc Số điện thoại</label>
+    <input id="loginUser" class="ph" placeholder="Email hoặc Số điện thoại">
+    <div class="err hidden" id="errUser">Email hoặc Số điện thoại là bắt buộc</div>
+    <label style="margin-top:18px">Mật khẩu</label>
+    <input id="loginPass" class="ph2" type="password" value="••••••••">
+    <div class="err hidden" id="errPass">Mật khẩu là bắt buộc</div>
+    <button class="btn-login" onclick="App.login()">Đăng nhập</button>
+    <a class="forgot" href="#" onclick="return false">Quên mật khẩu?</a>
+    <div class="login-roles">
+      <div class="lr-h">Đăng nhập nhanh theo vai trò (demo)</div>
+      <div class="role-grid" id="roleGrid"></div>
+    </div>
+  </div>
+  <div class="login-foot">⊘ Hỗ trợ: marketing@futaland.vn</div>
+</div>
+
+<!-- ====================== APP ====================== -->
+<div id="app">
+  <div class="topbar">
+    <div class="tb-logo">
+      <div class="logo-box"><b>FUTA</b><small>PHƯƠNG TRANG</small></div>
+      <div class="ti"><b>FUTA Land</b><small>CHẤT LƯỢNG LÀ DANH DỰ</small></div>
+      <button class="burger" onclick="App.toggleSidebar()">☰</button>
+    </div>
+    <div class="crumb" id="crumb"><span class="home">🏠 Dự án</span></div>
+    <div class="tb-right">
+      <div class="bell" id="bellBtn" onclick="App.toggleNotif(event)">🔔<span class="badge hidden" id="bellBadge">0</span></div>
+      <div class="tb-user" id="tbUser" onclick="App.toggleUserMenu(event)"><div class="avatar" id="userAvatar">--</div>
+        <span class="tb-uname"><span id="userName">—</span><br><span class="role-tag" id="userRole">—</span></span>
+        <span class="tb-caret">▾</span></div>
+    </div>
+  </div>
+  <div id="notifPanel" class="notif-panel hidden" onclick="event.stopPropagation()"></div>
+  <div id="userMenu" class="user-menu hidden" onclick="event.stopPropagation()"></div>
+
+  <div class="sidebar" id="sidebar"></div>
+  <div class="content" id="content"></div>
+</div>
+
+<div id="modalRoot"></div>
+
+<!-- data + logic layer -->
+<script src="js/supabase-config.js?v=14"></script>
+<script src="js/config.js?v=14"></script>
+<script src="js/seed.js?v=14"></script>
+<script src="js/store.js?v=14"></script>
+<script src="js/pricing.js?v=14"></script>
+<script src="js/workflow.js?v=14"></script>
+<script src="js/queue.js?v=14"></script>
+<script src="js/rbac.js?v=14"></script>
+<script src="js/uploader.js?v=14"></script>
+<script src="js/helpers.js?v=14"></script>
+<script src="js/filters.js?v=14"></script>
+<!-- screens -->
+<script src="js/screens-core.js?v=14"></script>
+<script src="js/screens-policy.js?v=14"></script>
+<script src="js/screens-payments.js?v=14"></script>
+<script src="js/screens-contracts.js?v=14"></script>
+<script src="js/screens-misc.js?v=14"></script>
+<script src="js/screens-profile.js?v=14"></script>
+<script src="js/screens-erp.js?v=14"></script>
+<script src="js/importer.js?v=14"></script>
+<!-- sync (tùy chọn) + bootstrap -->
+<script src="js/sync.js?v=14"></script>
+<script src="js/app.js?v=14"></script>
+</body>
+</html>
