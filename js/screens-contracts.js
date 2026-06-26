@@ -67,7 +67,10 @@ function contractDetailDynamic(type){
   const payBody=pay.map(r=>`<tr><td>${r[0]}</td><td>${r[1]==='-'?'':`<span class="code">${r[1]}</span>`}</td><td>${r[2]}</td><td style="white-space:nowrap">${r[3]||''}</td>
      <td style="white-space:nowrap">${r[4]||''}</td><td>${r[5]}</td><td style="white-space:nowrap">${r[6]}</td><td style="white-space:nowrap">${r[7]}</td>
      <td style="white-space:nowrap">${r[8]}</td><td style="text-align:center;white-space:nowrap;color:#8a93a0">${r[10]?'<span style="color:#1565d8">✔</span> ':''}✉ 🕓</td></tr>`).join('');
-  const lb=(leftBtns||[]).map(b=>`<a href="#" style="color:var(--blue);font-weight:600;white-space:nowrap" onclick="toast('${b}');return false">${b}</a>`).join('');
+  const lb=(leftBtns||[]).map(b=>{
+    const oc = /thanh l[ýy]/i.test(b) ? `C5BTpl.printContract('thanhly','${c.so}')` : `toast('${b}')`;
+    return `<a href="#" style="color:var(--blue);font-weight:600;white-space:nowrap" onclick="${oc};return false">${b}</a>`;
+  }).join('');
   const proj={duAn:c.duAn||'Dự án đào tạo Đợt 1', maSP:c.sp, gia:fmtVN(tong),
     chuaVAT:fmtVN(p?p.giaCB:0), coVAT:fmtVN(tong), tongGia:fmtVN(tong),
     cstt:'CS PTTT chuẩn', csck:'CSCK 1%'};
@@ -77,7 +80,7 @@ function contractDetailDynamic(type){
      ${hdPill(status)}
      ${status==='cho_kt'&&Perm.can('accounting.approve')?`<button class="btn btn-primary btn-sm" onclick="hdApprove('${type}','${c.so}')">✔ KT duyệt thu</button>`:''}
      <a href="#" style="color:var(--red);font-weight:600" onclick="toast('Mở chỉnh sửa hợp đồng');return false">✎ Chỉnh sửa</a>
-     <a href="#" style="color:var(--blue);font-weight:600" onclick="toast('Đang in hợp đồng...');return false">🖨 In HĐ</a>
+     <a href="#" style="color:var(--blue);font-weight:600" onclick="C5BTpl.printContract('${type}','${c.so}');return false">🖨 In HĐ</a>
      <a href="#" style="color:var(--blue);font-weight:600" onclick="go('${backRoute}');return false">↩ Quay lại</a>
    </div>
    <div class="grid2 det">
