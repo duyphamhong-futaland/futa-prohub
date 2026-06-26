@@ -488,23 +488,53 @@ function box(text,color,shape){
 const ARR=`<div style="text-align:center;color:#888;font-size:16px;line-height:1">↓</div>`;
 function lane(boxesHTML){return `<div style="flex:1;min-width:200px;padding:0 6px">${boxesHTML}</div>`;}
 function swimHead(lanes){return `<div style="display:flex;border:1px solid var(--line);background:#f3f6fb;border-radius:8px 8px 0 0">${lanes.map(l=>`<div style="flex:1;min-width:200px;text-align:center;font-weight:700;padding:12px 6px;border-right:1px solid var(--line);font-size:12.5px">${l}</div>`).join('')}</div>`;}
+function qtTitle(t){return `<h2 style="text-align:right;color:var(--orange);font-size:21px;margin:26px 0 12px">${t}</h2>`;}
+function qtBand(boxesHTML){return `<div style="display:flex;border:1px solid var(--line);border-top:none;padding:14px 0;overflow:auto">${boxesHTML}</div>`;}
+function qtCap(html){return `<div style="background:#eaf2ff;border:1px solid #d8e6fb;border-top:none;border-radius:0 0 8px 8px;padding:9px 14px;font-size:12px;color:#2a3340">🔧 <b>Ánh xạ Prohub:</b> ${html}</div>`;}
 function quytrinhBody(){
-  const p1Lanes=['Đại lý','Hệ thống','Sales Admin','TPKD / PGDKD','Kế toán'];
-  const L1=lane(box('DANH SÁCH GIAO DỊCH<br>Xem sản phẩm','y')+ARR+box('Bấm Nút Đăng Ký','p')+ARR+box('Chọn KH vãng lai','p')+ARR+box('Nhập thông tin Khách hàng','w')+ARR+box('Bấm Lưu thông tin','p')+ARR+box('Bấm Nút Xác nhận','p')+ARR+box('IN / TẢI FILE<br>Phiếu YC tư vấn · Đơn ĐKNV','b')+ARR+box('Chuyển hồ sơ KH','w'));
-  const L2=lane(box('Trả về','y')+`<div style="text-align:center;font-size:10px;color:#888;margin:4px 0">↑ Hết giờ tự trả</div>`+box('Hết thời gian ?','p','d'));
-  const L3=lane(box('Thông báo đầy đủ hồ sơ','b')+ARR+box('Điền cột Ghi chú "Đủ hồ sơ"','b')+ARR+box('Đính kèm file scan chứng từ','w')+ARR+box('Đầy đủ ?','y','d')+ARR+box('Kiểm tra hồ sơ Đại lý','w'));
-  const L4=lane(box('DANH SÁCH GIAO DỊCH','b')+ARR+box('Bấm Nút Xác nhận GD','o')+ARR+box('Chuyển hồ sơ kế toán','b'));
-  const L5=lane(box('Kiểm tra tiền ngân hàng','b')+ARR+box('Bấm Duyệt phiếu thu','b')+ARR+box('IN PHIẾU THU TIỀN','b')+ARR+box('Hoàn thành hồ sơ thu','g'));
-  const p1=`<div style="display:flex;border:1px solid var(--line);border-top:none;border-radius:0 0 8px 8px;padding:14px 0;overflow:auto">${L1}${L2}${L3}${L4}${L5}</div>`;
-  const p2Lanes=['Đại lý','Sales Admin','TPBH','PTKD','Kế toán'];
-  const Q1=lane(box('Bấm Yêu cầu Hủy ĐKNV<br>Chuyển hồ sơ về Futaland','w'));
-  const Q3=lane(box('Thu hồi Mã căn cần hoàn tiền','b')+ARR+box('Duyệt YC Hoàn Tiền','b')+ARR+box('Đối chiếu thông tin và Bấm Duyệt','b'));
-  const Q5=lane(`<div style="height:200px"></div>`+box('Nhận Đề Nghị Hoàn Tiền<br>Chuyển tiền + Xác nhận hoàn','b'));
-  const p2=`<div style="display:flex;border:1px solid var(--line);border-top:none;border-radius:0 0 8px 8px;padding:14px 0;overflow:auto">${Q1}${lane('')}${Q3}${lane('')}${Q5}</div>`;
-  return `<h2 style="text-align:right;color:var(--orange);font-size:22px;margin:6px 0 14px">QUY TRÌNH ĐẶT CHỖ &amp; THU TIỀN</h2>
-    ${swimHead(p1Lanes)}${p1}
-    <h2 style="text-align:right;color:var(--orange);font-size:22px;margin:30px 0 14px">QUY TRÌNH HỦY CHỖ &amp; HOÀN TIỀN</h2>
-    ${swimHead(p2Lanes)}${p2}`;
+  /* ===== QT1 — ĐẶT CHỖ & THU TIỀN (đối chứng apps.futaland.vn) ===== */
+  const L1a=['Đại lý','Sales Admin (MS.Thảo)','TPKD · PGĐKD','Kế toán (Mr.Dự · Mr.Cường)'];
+  const p1=qtBand(
+    lane(box('① DANH SÁCH GIAO DỊCH<br>Xem sản phẩm','y')+ARR+box('② Bấm Nút Đăng Ký','p')+ARR+box('③ Chọn KH vãng lai','p')+ARR+box('④ Nhập thông tin Khách hàng','w')+ARR+box('⑤ Bấm Lưu thông tin','p')+ARR+box('⑥ Bấm Nút Xác nhận','p')+ARR+box('⑦ IN / TẢI: Phiếu YC tư vấn · Đơn ĐKNV','b')+ARR+box('⑧ Chuyển hồ sơ KH → Sales Admin','w')+ARR+box('⑮ Tiếp nhận → ký HĐ ĐKNV','r'))+
+    lane(box('⑨ Kiểm tra hồ sơ Đại lý','w')+ARR+box('Đầy đủ ?','y','d')+ARR+box('⑩ Đính kèm scan chứng từ · Cập nhật tt (YCDCO)','w')+ARR+box('⑪ Ghi chú "Đủ hồ sơ" · Thông báo → TPKD','b'))+
+    lane(box('⑫ DANH SÁCH GIAO DỊCH','b')+ARR+box('Bấm Nút Xác nhận GD','o')+ARR+box('Chuyển hồ sơ kế toán','w'))+
+    lane(box('⑬ Kiểm tra tiền NH · thông tin hồ sơ','b')+ARR+box('⑭ Duyệt phiếu thu','b')+ARR+box('IN chứng từ: Phiếu XNCK / thu tiền mặt','b')+ARR+box('Hoàn thành hồ sơ → gửi KD','g')));
+  /* ===== QT2 — ĐẶT CỌC & THU TIỀN (có lane Hệ thống + timeout) ===== */
+  const L2a=['Đại lý','Hệ thống','Sales Admin','TPKD · PGĐKD','Kế toán'];
+  const p2=qtBand(
+    lane(box('① DANH SÁCH GIAO DỊCH<br>Xem sản phẩm','y')+ARR+box('② Bấm Nút Đăng Ký','p')+ARR+box('③ Chọn KH vãng lai','p')+ARR+box('④ Nhập tt KH · ⑤ Lưu · ⑥ Xác nhận','p')+ARR+box('⑦ IN / TẢI: Phiếu YC tư vấn · Đơn ĐKNV','b')+ARR+box('⑧ Chuyển hồ sơ → Sales Admin','w')+ARR+box('⑯ Tiếp nhận → ký HĐ cọc','r'))+
+    lane(box('Trả về<br><span style="font-size:10px">không nhập tt → nhấn xác nhận</span>','y')+`<div style="text-align:center;font-size:10px;color:#888;margin:2px 0">↑ hết giờ tự trả</div>`+box('Hết thời gian ?','p','d'))+
+    lane(box('⑨ Kiểm tra hồ sơ Đại lý','w')+ARR+box('Đầy đủ ?','y','d')+ARR+box('⑩ Đính kèm scan · Cập nhật tt','w')+ARR+box('⑪ Ghi chú "Đủ hồ sơ" → TPKD','b'))+
+    lane(box('⑫ DANH SÁCH GIAO DỊCH','b')+ARR+box('Bấm Nút Xác nhận GD','o')+ARR+box('Chuyển hồ sơ kế toán','w'))+
+    lane(box('⑬ Kiểm tra tiền NH · hồ sơ','b')+ARR+box('⑭ Xác nhận cọc → tạo HĐ cọc + phiếu thu','o')+ARR+box('⑮ Duyệt phiếu thu · IN chứng từ','b')+ARR+box('Chuyển cọc thành công','g')));
+  /* ===== QT3 — HỦY CHỖ & HOÀN TIỀN (3 cấp) ===== */
+  const L3a=['Đại lý','Sales Admin','TPBH (anh Trí)','PTKD','Kế toán'];
+  const p3=qtBand(
+    lane(box('① Bấm Yêu cầu Hủy ĐKNV trên phần mềm<br>Chuyển hồ sơ về Futaland','w'))+
+    lane('')+
+    lane(box('② Thu hồi Mã căn cần hoàn tiền','b')+ARR+box('③ Duyệt YC Hoàn Tiền','b')+ARR+box('④ Đối chiếu thông tin · Bấm Duyệt','b'))+
+    lane('')+
+    lane(`<div style="height:120px"></div>`+box('⑤ Nhận Đề Nghị Hoàn Tiền<br>Chuyển tiền · Bấm Xác Nhận Hoàn Tiền','b')));
+  return `<div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;padding:10px 14px;margin:4px 0 16px;font-size:12.5px;color:#7c3a06">
+      Tái dựng đối chứng <b>apps.futaland.vn</b> (tab Hướng dẫn quy trình). Số ①②③… = thứ tự xuyên các vai trò.</div>
+    ${qtTitle('QUY TRÌNH ĐẶT CHỖ &amp; THU TIỀN')}${swimHead(L1a)}${p1}
+    ${qtCap('② Đăng ký = <code>book</code> (mở_bán→giữ_chỗ, YCDCH) · ⑥ Xác nhận = <code>register</code> (→đăng_ký, YCDCO) · ⑨–⑪ <code>checkDossier</code> (→kiểm_tra) · ⑫ Xác nhận GD = <code>kdReview</code> (→KD kiểm duyệt) · ⑭ Duyệt phiếu thu = <code>approvePayment</code> · ⑮ Ký HĐ = <code>createHDMB</code> (→hợp_đồng).')}
+    ${qtTitle('QUY TRÌNH ĐẶT CỌC &amp; THU TIỀN')}${swimHead(L2a)}${p2}
+    ${qtCap('Lane Hệ thống = hàng đợi giữ chỗ có đếm ngược (<code>Queue.startHold</code>); hết giờ tự trả về kho (<code>reclaim</code>). ⑭ Xác nhận cọc = <code>confirmCoc</code> (→chuyển_cọc, tạo HĐ cọc + phiếu thu cọc) · ⑮ <code>approvePayment</code>.')}
+    ${qtTitle('QUY TRÌNH HỦY CHỖ &amp; HOÀN TIỀN')}${swimHead(L3a)}${p3}
+    ${qtCap('① <code>createRefund</code> (Đại lý, cho_kd) · ②–④ <code>approveRefundKD</code> (TPKD/TPBH, cho_kt) · ⑤ <code>approveRefundKT</code> (Kế toán, đã_hoàn ⇒ thu hồi căn về kho + thanh lý HĐ cọc).')}
+    <div class="card" style="margin-top:24px;border-left:4px solid #1f9d3d">
+      <div class="section-title" style="color:#1f8a44">✓ Kết quả QC — đối chứng state-machine với SOP</div>
+      <div style="font-size:13px;color:#2a3340;line-height:1.6">
+        <b>22/22 kiểm thử tự động ĐẠT</b> (0 lỗi): trọn vòng đời 3 quy trình theo đúng vai trò + <b>5 ca RBAC âm tính</b>
+        (sai vai trò bị chặn ở tầng logic). Chứng từ liên kết (YCDCH · YCDCO · HĐ cọc · phiếu thu · HĐMB · đề nghị hoàn tiền) sinh đúng từng bước.
+        <div style="margin-top:10px;color:#7c3a06"><b>2 điểm cần quyết (chưa phải lỗi):</b></div>
+        <ul style="margin:4px 0 0;padding-left:20px">
+          <li><b>Vai trò Sales Admin</b>: SOP tách "Sales Admin" (kiểm tra đủ hồ sơ) khỏi TPKD; app đang gộp vào quyền <code>contract.manage</code> (TPKD). Cần thì thêm vai trò Sales Admin riêng.</li>
+          <li><b>Chứng từ giai đoạn đặt chỗ</b>: SOP in <i>Phiếu YC tư vấn · Đơn ĐKNV · Hợp đồng ĐKNV · Ủy nhiệm chi</i>; bộ template hiện có HĐ cọc/HĐMB/thanh lý/bàn giao/bảo lãnh — chưa có mẫu ĐKNV/tư vấn (bổ sung sau khi có file gốc).</li>
+        </ul>
+      </div>
+    </div>`;
 }
 
 /* ---- Cập nhật giá / Tải nhập / Công bố giá (giữ UI gốc, có hiệu lực) ---- */
