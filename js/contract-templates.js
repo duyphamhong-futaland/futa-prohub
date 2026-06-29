@@ -1,16 +1,29 @@
 /* ============================================================
    FUTA Land — Prohub · contract-templates.js
-   Cầu nối bộ template hợp đồng C5B (prohub/templates/c5b/) vào luồng
-   giao dịch: auto-điền từ dữ liệu căn/khách rồi mở cửa sổ in.
+   Cầu nối bộ template hợp đồng vào luồng giao dịch: auto-điền từ
+   dữ liệu căn/khách rồi mở cửa sổ in.
 
-   - manifest.js (window.C5B_TEMPLATES) nạp sẵn ở index.html (nhẹ).
-   - content.js (window.C5B_CONTENT, ~1MB) nạp LƯỜI ở lần in đầu tiên.
-   Bộ template dùng CHUNG với Document Composer (documents/) — 1 nguồn.
+   ĐA DỰ ÁN (project-aware):
+     · C5B  — FUTA Kim Phát (nhà liền kề)     -> templates/c5b/
+     · DNTS — Đà Nẵng Times Square / FUTA      -> templates/dnts/
+              Residence (căn hộ CT3 & CT7)      KHỚP seed Prohub.
+   Mỗi pack: manifest (nạp sẵn, nhẹ) + content (nạp LƯỜI lần in đầu).
+   Chọn pack theo dự án của CĂN: mã/block CT3·CT7 -> DNTS, còn lại -> C5B.
+
+   Giữ tên public `C5BTpl` để khỏi sửa callsite (screens-contracts.js).
    ============================================================ */
 const C5BTpl = (function () {
-  const VER = '15';
+  const VER = '26';
 
-  /* CSS dùng cho cửa sổ in (A4, Times New Roman, chuẩn văn bản hành chính) */
+  /* các pack template */
+  const PACKS = {
+    c5b:  { tpls: () => window.C5B_TEMPLATES,  content: () => window.C5B_CONTENT,
+            src: 'templates/c5b/content.js',  groupMap: { coc: 'coc', mb: 'hdmb', thanhly: 'thanhly' } },
+    dnts: { tpls: () => window.DNTS_TEMPLATES, content: () => window.DNTS_CONTENT,
+            src: 'templates/dnts/content.js', groupMap: { coc: 'coc', mb: 'hdmb', thanhly: null } },
+  };
+
+  /* CSS cửa sổ in (A4, Times New Roman) */
   const PRINT_CSS = `
     @page { size: A4; margin: 18mm 16mm; }
     body { font-family:'Times New Roman', serif; font-size:13pt; line-height:1.5; color:#000;
@@ -27,32 +40,46 @@ const C5BTpl = (function () {
     table.c5b-tbl { border-collapse:collapse; width:100%; margin:6px 0; }
     .c5b-tbl td, .c5b-tbl th { border:1px solid #555; padding:4px 7px; vertical-align:top; text-align:left; }
     .c5b-toolbar { position:sticky; top:0; background:#1B7F3B; color:#fff; padding:9px 14px; margin:-16px -12px 16px;
-                   display:flex; gap:12px; align-items:center; font-family:Arial, sans-serif; font-size:13px; }
+                   display:flex; gap:12px; align-items:center; flex-wrap:wrap; font-family:Arial, sans-serif; font-size:13px; }
     .c5b-toolbar select { padding:4px 8px; border-radius:6px; border:none; }
     .c5b-toolbar button { padding:5px 14px; border:none; border-radius:6px; background:#fff; color:#1B7F3B; font-weight:700; cursor:pointer; }
     @media print { .c5b-toolbar { display:none; } body { padding-top:0; } }
   `;
 
-  function all() { return window.C5B_TEMPLATES || []; }
-  function meta(id) { return all().find(t => t.id === id); }
+  /* danh sách template của 1 pack (gắn nhãn project nếu manifest C5B chưa có) */
+  function all(project) {
+    const p = PACKS[project] || PACKS.c5b;
+    return (p.tpls() || []).map(t => t.project ? t : Object.assign({ project: project }, t));
+  }
+  function meta(project, id) { return all(project).find(t => t.id === id); }
 
-  /* nạp lười content.js rồi gọi cb */
-  function ensureContent(cb) {
-    if (window.C5B_CONTENT) return cb();
+  /* dự án của căn: mã/block CT3·CT7 -> DNTS, còn lại -> C5B */
+  function projectOf(p, c) {
+    const key = (p && (p.ma || p.block)) || (c && c.sp) || '';
+    return /^\s*CT\s*[37]/i.test(key) ? 'dnts' : 'c5b';
+  }
+
+  /* nạp lười content.js của pack rồi gọi cb */
+  function ensureContent(project, cb) {
+    const pk = PACKS[project] || PACKS.c5b;
+    if (pk.content()) return cb();
     const s = document.createElement('script');
-    s.src = 'templates/c5b/content.js?v=' + VER;
+    s.src = pk.src + '?v=' + VER;
     s.onload = () => cb();
     s.onerror = () => (typeof toast === 'function' ? toast('Lỗi nạp nội dung mẫu hợp đồng') : null);
     document.head.appendChild(s);
   }
 
-  /* chọn template theo nhóm + đối tượng + phương thức (fallback dần) */
-  function pick(group, buyerType, payment) {
-    const list = all().filter(t => t.group === group);
-    return list.find(t => t.buyerType === buyerType && t.payment === payment)
-        || list.find(t => t.buyerType === buyerType && !t.payment)
-        || list.find(t => t.buyerType === buyerType)
-        || list[0] || null;
+  /* chọn template theo nhóm + đối tượng + phương thức + tháp (fallback dần) */
+  function pick(project, group, buyerType, payment, tower) {
+    const tw = (tower || '').toLowerCase();
+    const list = all(project).filter(t => t.group === group);
+    const byTower = tw ? list.filter(t => !t.tower || t.tower.toLowerCase() === tw) : list;
+    const pool = byTower.length ? byTower : list;
+    return pool.find(t => t.buyerType === buyerType && t.payment === payment)
+        || pool.find(t => t.buyerType === buyerType && !t.payment)
+        || pool.find(t => t.buyerType === buyerType)
+        || pool[0] || null;
   }
 
   /* đoán đối tượng từ tên khách */
@@ -60,28 +87,36 @@ const C5BTpl = (function () {
     return /c[ôo]ng ty|cty|\bct\b|doanh nghi[ệe]p|tnhh|c[ổo] ph[ầa]n/i.test(name || '') ? 'cong_ty' : 'ca_nhan';
   }
 
-  /* gom dữ liệu điền từ hợp đồng + căn + khách */
+  /* gom dữ liệu điền (superset cho cả C5B & DNTS) */
   function dataFrom(c, p, cust) {
     const fv = typeof fmtVN === 'function' ? fmtVN : (x => x);
-    const khName = (c && (c.kh)) || (cust && cust.name) || (c && c.ten ? String(c.ten).split('-').slice(-1)[0] : '');
+    const khName = (c && c.kh) || (cust && cust.name) || (c && c.ten ? String(c.ten).split('-').slice(-1)[0] : '');
+    const isCty = buyerTypeOf(khName) === 'cong_ty';
     const d = {
-      so_hd: c && c.so || '', ngay_ky: c && (c.ngayTao || c.ngay) || '',
-      ma_sp: (p && p.ma) || (c && c.sp) || '',
-      block: p && p.block || '', dt_dat: p ? p.ttuy : '', dt_san: p ? p.tim : '',
+      so_hd: (c && c.so) || '', ngay_ky: (c && (c.ngayTao || c.ngay)) || '',
+      so_hdmb: (c && c.so) || '',
+      // căn — C5B keys
+      ma_sp: (p && p.ma) || (c && c.sp) || '', block: (p && p.block) || '',
+      dt_dat: p ? p.ttuy : '', dt_san: p ? (p.tim || p.ttuy) : '', so_tang: (p && p.so_tang) || '',
       gia_ban: p ? fv(p.giaVAT || p.giaCB) : '',
-      so_hd_coc: c && (c.hdCoc || c.phieuCoc) || '', ngay_hd_coc: c && c.ngayTao || '',
+      // căn — DNTS keys (căn hộ chung cư)
+      thap: (p && p.block) || '', tang: (p && p.tang) || '',
+      dt_su_dung: p ? p.ttuy : '',
+      // cọc / thanh lý
+      so_hd_coc: (c && (c.hdCoc || c.phieuCoc)) || '', ngay_hd_coc: (c && c.ngayTao) || '',
       tien_coc: fv(100000000), tien_coc_chu: 'Một trăm triệu đồng',
-      tien_hoan: fv(100000000), so_hdmb: c && c.so || '',
+      tien_hoan: fv(100000000),
     };
     if (cust) {
       d.ben_b_ten = cust.name || ''; d.ben_b_cccd = cust.cccd || '';
       d.ben_b_cccd_ngay = cust.ngayCap || ''; d.ben_b_cccd_noi = cust.noiCap || '';
-      d.ben_b_cutru = cust.diaChi || ''; d.ben_b_dienthoai = cust.phone || '';
-      d.ben_b_email = cust.email || '';
-      d.ben_b_congty = buyerTypeOf(khName) === 'cong_ty' ? khName : '';
-      d.ben_b_daidien = ''; d.ben_b_diachi = cust.diaChi || ''; d.ben_b_mst = '';
+      d.ben_b_cutru = cust.diaChi || ''; d.ben_b_diachi_lh = cust.diaChiLienHe || cust.diaChi || '';
+      d.ben_b_dienthoai = cust.phone || ''; d.ben_b_email = cust.email || '';
+      d.ben_b_congty = isCty ? khName : ''; d.ben_b_diachi = cust.diaChi || '';
+      d.ben_b_daidien = cust.nguoiDaiDien || ''; d.ben_b_chucvu = cust.chucVu || '';
+      d.ben_b_mst = cust.mst || ''; d.ben_b_dn_ngay = ''; d.ben_b_dn_noi = '';
     } else {
-      d.ben_b_ten = khName;
+      d.ben_b_ten = isCty ? '' : khName; d.ben_b_congty = isCty ? khName : '';
     }
     return d;
   }
@@ -95,20 +130,26 @@ const C5BTpl = (function () {
     });
   }
 
-  /* mở cửa sổ in cho 1 template + dữ liệu, kèm thanh chọn biến thể (không in ra) */
-  function openPrint(id, data, group, note) {
-    ensureContent(function () {
-      const html = window.C5B_CONTENT[id];
+  /* mở cửa sổ in: thanh chọn biến thể nhóm theo groupName (cả bộ của dự án) */
+  function openPrint(project, id, data, group, note) {
+    ensureContent(project, function () {
+      const CONTENT = (PACKS[project] || PACKS.c5b).content();
+      const html = CONTENT && CONTENT[id];
       if (!html) { typeof toast === 'function' && toast('Không tìm thấy mẫu ' + id); return; }
       const noteHtml = note ? `<span style="background:#fff;color:#1B7F3B;padding:3px 10px;border-radius:6px;font-weight:700">${note}</span>` : '';
-      const opts = all().filter(t => !group || t.group === group)
-        .map(t => `<option value="${t.id}"${t.id === id ? ' selected' : ''}>${t.name}</option>`).join('');
+      // gom optgroup theo groupName để mở được cả bộ văn bản của dự án
+      const groups = {};
+      all(project).forEach(t => { (groups[t.groupName] = groups[t.groupName] || []).push(t); });
+      const opts = Object.keys(groups).map(gn =>
+        `<optgroup label="${gn}">` +
+        groups[gn].map(t => `<option value="${t.id}"${t.id === id ? ' selected' : ''}>${t.name}</option>`).join('') +
+        `</optgroup>`).join('');
       const dataJson = JSON.stringify(data || {}).replace(/</g, '\\u003c');
-      const contentJson = JSON.stringify(window.C5B_CONTENT).replace(/</g, '\\u003c');
+      const contentJson = JSON.stringify(CONTENT).replace(/</g, '\\u003c');
       const w = window.open('', '_blank');
       w.document.write(
         '<!doctype html><html lang="vi"><head><meta charset="utf-8"><title>' +
-        (meta(id) ? meta(id).name : id) + '</title><style>' + PRINT_CSS + '</style></head><body>' +
+        (meta(project, id) ? meta(project, id).name : id) + '</title><style>' + PRINT_CSS + '</style></head><body>' +
         '<div class="c5b-toolbar">📑 Mẫu: <select id="c5bSel" onchange="c5bRender(this.value)">' + opts + '</select>' +
         '<button onclick="window.print()">🖨 In / Lưu PDF</button>' + noteHtml +
         '<span style="opacity:.85">Đã tự điền từ dữ liệu giao dịch — chỗ trống là ô điền tay.</span></div>' +
@@ -123,32 +164,35 @@ const C5BTpl = (function () {
     });
   }
 
-  /* === API cho luồng giao dịch === */
-  // type: 'coc' | 'mb' | 'thanhly' ; so: số hợp đồng
+  /* === API cho luồng giao dịch ===
+     type: 'coc' | 'mb' | 'thanhly' ; so: số hợp đồng */
   function printContract(type, so) {
     const st = (typeof Store !== 'undefined') ? Store.get() : null;
     if (!st) return;
-    const groupMap = { coc: 'coc', mb: 'hdmb', thanhly: 'thanhly' };
     const arr = type === 'mb' ? st.hdMB : st.hdCoc;
     const c = (arr || []).find(x => x.so === so) || (arr || [])[0];
     if (!c) { typeof toast === 'function' && toast('Không tìm thấy hợp đồng'); return; }
     const p = typeof Store.product === 'function' ? Store.product(c.sp) : null;
     const cust = (p && p.customerId && typeof Store.customer === 'function') ? Store.customer(p.customerId) : null;
     const khName = c.kh || (cust && cust.name) || (c.ten ? String(c.ten).split('-').slice(-1)[0] : '');
-    const group = groupMap[type] || 'hdmb';
-    const tpl = pick(group, buyerTypeOf(khName), 'chuan');
+    const project = projectOf(p, c);
+    const pk = PACKS[project] || PACKS.c5b;
+    const group = pk.groupMap[type];
+    if (!group) { typeof toast === 'function' && toast('Dự án ' + project.toUpperCase() + ' chưa có mẫu cho "' + type + '"'); return; }
+    const tower = (p && p.block) || '';
+    const tpl = pick(project, group, buyerTypeOf(khName), 'chuan', tower);
     if (!tpl) { typeof toast === 'function' && toast('Chưa có mẫu cho nhóm ' + group); return; }
-    // Chính sách C5B áp dụng theo phương thức (Vay/Chuẩn/Nhanh) — đối chứng file CS 22/06/2026
+    // Chính sách CK theo phương thức (chỉ C5B có bảng đối chứng POL.c5bDiscount)
     let note = '';
-    if ((group === 'hdmb' || group === 'coc') && typeof POL !== 'undefined') {
+    if (project === 'c5b' && (group === 'hdmb' || group === 'coc') && typeof POL !== 'undefined' && POL.c5bDiscount) {
       const ck = POL.c5bDiscount(tpl.payment);
       const fv = typeof fmtVN === 'function' ? fmtVN : (x => x);
       const amt = ck.pct ? Math.round((p ? (p.giaCB || 0) : 0) * ck.pct) : 0;
       if (ck && ck.label) note = 'CS: ' + ck.label + (ck.pct ? ' · CK ' + (ck.pct * 100) + '% = ' + fv(amt) + 'đ' : ' · không CK');
     }
-    openPrint(tpl.id, dataFrom(c, p, cust), group, note);
+    openPrint(project, tpl.id, dataFrom(c, p, cust), group, note);
     typeof toast === 'function' && toast('Mở mẫu: ' + tpl.name);
   }
 
-  return { all, meta, pick, fill, dataFrom, buyerTypeOf, openPrint, printContract, ensureContent };
+  return { all, meta, pick, fill, dataFrom, buyerTypeOf, projectOf, openPrint, printContract, ensureContent };
 })();
